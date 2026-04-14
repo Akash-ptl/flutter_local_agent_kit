@@ -76,7 +76,8 @@ Begin!""";
             yield "Thinking (using ${tool.name})...";
             
             final observation = await tool.call(toolInput);
-            final observationStr = observation?.toString() ?? "No output received from tool.";
+            final observationStr = observation;
+
             
             conversation.add(AgentChatMessage.assistant(fullResponse));
             conversation.add(AgentChatMessage.system("Observation: $observationStr"));
@@ -97,8 +98,11 @@ Begin!""";
 
   String? _parseAction(String text) {
     final match = RegExp(r'Action: (.*)').firstMatch(text);
-    return match?.group(1)?.trim();
+    if (match == null) return null;
+    return match.group(1)?.trim();
   }
+
+
 
   Map<String, dynamic> _parseInput(String text) {
     final match = RegExp(r'Action Input: (.*)').firstMatch(text);
