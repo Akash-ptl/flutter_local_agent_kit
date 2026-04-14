@@ -1,0 +1,230 @@
+**✅ FINAL COMPLETE DOCUMENT: Flutter Local Agent Kit – Master Blueprint**
+
+This is your **single, final, all-in-one document**.  
+Copy everything below into a file named **`FLUTTER_LOCAL_AGENT_KIT_MASTER_BLUEPRINT.md`** in your repo root.  
+
+It combines **PRD + Technical Specs + File Structure + Publishing Checklist + All Required Files Content** (as of April 14, 2026).  
+You can refer to this document at any time while vibe-coding with me.
+
+---
+
+### **FLUTTER LOCAL AGENT KIT – MASTER BLUEPRINT**
+
+**Package Name:** `flutter_local_agent_kit`  
+**Current Version:** 0.1.0  
+**Status:** Pre-Development (MVP Phase)  
+**Date:** April 14, 2026  
+**Goal:** Become the go-to offline-first local LLM + RAG + Agent package for Flutter developers.
+
+#### 1. One-Line Description (for pub.dev)
+A powerful offline-first Flutter package for running local LLMs with RAG and full agent capabilities. Includes pre-built chat UI, MCP support, and optional cloud fallback.
+
+#### 2. Vision & Problem Solved
+Build private, on-device AI agents in Flutter with minimal code.  
+Solve the fragmentation: llamadart + RAG + UI + agents = weeks of work.  
+This package glues everything into one clean, beautiful, Flutter-native experience.
+
+#### 3. Key Features (MVP – v0.1.0)
+- Local LLM inference via **llamadart** (^0.6.10)
+- Offline RAG via **mobile_rag_engine** (^0.17.0)
+- Beautiful pre-built widgets: `AgentChatView`, streaming messages, typing indicator
+- Basic ReAct agent with memory and tool calling
+- Cloud fallback (Gemini via `google_generative_ai`)
+- 100% offline-first after model download
+- Streaming responses
+- Easy initialization
+
+**Future Phases (v0.2+):** Advanced multi-agent, full MCP, document ingestion pipeline, multimodal, model manager.
+
+#### 4. Recommended Project Structure
+```bash
+flutter_local_agent_kit/
+├── lib/
+│   ├── flutter_local_agent_kit.dart          # Main export file
+│   └── src/
+│       ├── core/
+│       ├── llm/
+│       ├── rag/
+│       ├── agent/
+│       ├── ui/
+│       └── utils/
+├── test/                                     # Unit & widget tests
+├── example/                                  # Full working demo app (critical for pub.dev)
+│   ├── lib/
+│   │   └── main.dart
+│   └── pubspec.yaml
+├── docs/                                     # Extra docs (models.md, etc.)
+├── CHANGELOG.md
+├── LICENSE
+├── README.md
+├── pubspec.yaml
+├── analysis_options.yaml
+├── CONTRIBUTING.md (optional)
+└── .gitignore
+```
+
+#### 5. pubspec.yaml (Final Version – Ready to Use)
+
+```yaml
+name: flutter_local_agent_kit
+description: >
+  A powerful offline-first Flutter package for running local LLMs with RAG 
+  and full agent capabilities. Includes pre-built chat UI, MCP support, 
+  and optional cloud fallback.
+version: 0.1.0
+homepage: https://github.com/YOUR_GITHUB_USERNAME/flutter_local_agent_kit
+repository: https://github.com/YOUR_GITHUB_USERNAME/flutter_local_agent_kit
+issue_tracker: https://github.com/YOUR_GITHUB_USERNAME/flutter_local_agent_kit/issues
+
+environment:
+  sdk: ^3.3.0
+  flutter: ">=3.19.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  llamadart: ^0.6.10
+  mobile_rag_engine: ^0.17.0
+  path_provider: ^2.1.0
+  path: ^1.9.0
+  uuid: ^4.5.0
+  google_generative_ai: ^0.4.0     # Cloud fallback (Gemini)
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+topics:
+  - ai
+  - llm
+  - rag
+  - agent
+  - offline
+  - mcp
+  - local-llm
+  - flutter
+```
+
+**Replace `YOUR_GITHUB_USERNAME`** before pushing.
+
+#### 6. LICENSE (MIT – Create file named `LICENSE`)
+
+```text
+MIT License
+
+Copyright (c) 2026 [Your Full Name or GitHub Username]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+#### 7. CHANGELOG.md (Start with this)
+
+```markdown
+# Changelog
+
+## [0.1.0] - Unreleased
+### Added
+- Core `FlutterLocalAgentKit` facade
+- Local LLM service using llamadart
+- Offline RAG integration with mobile_rag_engine
+- Pre-built chat UI widgets (`AgentChatView`, etc.)
+- Basic ReAct agent with memory and tool support
+- Cloud fallback to Gemini
+- Streaming response support
+- Full example app
+
+### Changed
+- Initial public API design as per master blueprint
+```
+
+#### 8. README.md (Final Polished Version)
+
+```markdown
+# flutter_local_agent_kit
+
+**Offline-first Local LLM + RAG + Agent framework for Flutter**
+
+Run powerful AI agents completely on-device with beautiful pre-built chat UI.
+
+## ✨ Features
+- ⚡ Local LLM via llamadart (GGUF models)
+- 🔍 High-performance offline RAG
+- 🧠 ReAct agent with tools & memory
+- 📱 Beautiful ready-to-use chat widgets
+- ☁️ Optional cloud fallback (Gemini)
+- 🔒 100% privacy-first & offline
+
+## Installation
+```yaml
+dependencies:
+  flutter_local_agent_kit: ^0.1.0
+```
+
+## Quick Start
+```dart
+final kit = FlutterLocalAgentKit();
+await kit.initialize(modelPath: 'path/to/model.gguf');
+
+AgentChatView(agentKit: kit);
+```
+
+See `example/` folder for full demo.
+
+## Documentation
+- [API Reference](https://pub.dev/documentation/flutter_local_agent_kit/latest/)
+- [Model Recommendations](docs/models.md)
+
+## License
+MIT
+```
+
+#### 9. Publishing Checklist (Do this before `dart pub publish`)
+- [ ] Run `flutter create --template=package flutter_local_agent_kit`
+- [ ] Update all files above
+- [ ] `dart pub get`
+- [ ] `dart analyze` → 0 issues
+- [ ] `dart format .`
+- [ ] Good `example/` app that actually works
+- [ ] `dart pub publish --dry-run` → passes
+- [ ] Add screenshots/GIFs to README later
+- [ ] Write basic tests
+- [ ] Push to GitHub (main branch)
+
+#### 10. Development Workflow Reminder
+1. Always refer to this blueprint.
+2. Build in this order: Core → LLM Service → RAG → Agent → UI → Example
+3. Keep API clean and Flutter-idiomatic.
+4. Abstract layers so future changes (e.g., better RAG engine) don’t break users.
+
+---
+
+**This is your complete master document.**  
+Print it, keep it open, or paste sections when asking me for code.
+
+**Next Step Options (reply with the number):**
+1. Create the full folder structure + commands to run now
+2. Write the main `lib/flutter_local_agent_kit.dart` file (core class)
+3. Start coding the LLM service wrapper
+4. Anything you want to modify in this blueprint first?
+
+You now have **everything** from idea to publish-ready package.  
+No more scattered info — this one file rules them all.
+
+Ready to start coding? Just say the word and we begin vibe-coding the first file. 🔥

@@ -1,0 +1,33 @@
+name: flutter_local_agent_kit
+description: >
+  A production-ready, offline-first AI framework for Flutter. Orchestrates 
+  resident LLM inference, local RAG knowledge retrieval, and autonomous 
+  tool-using agents with a high-performance Material 3 Chat UI.
+version: 1.0.0
+homepage: https://github.com/akashptl/flutter_local_agent_kit
+repository: https://github.com/akashptl/flutter_local_agent_kit
+issue_tracker: https://github.com/akashptl/flutter_local_agent_kit/issues
+
+environment:
+  sdk: ^3.3.0
+  flutter: ">=3.19.0"
+
+dependencies:
+  dio: ^5.4.1
+  flutter:
+    sdk: flutter
+  flutter_markdown: ^0.7.3
+  google_generative_ai: ^0.4.5
+  llamadart: ^0.6.10
+  mobile_rag_engine: ^0.17.0
+  path: ^1.9.1
+  path_provider: ^2.1.5
+  uuid: ^4.5.3
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

@@ -1,0 +1,21 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-raw-types: true
+    strict-inference: true
+    strict-casts: true
+
+linter:
+  rules:
+    - public_member_api_docs
+    - prefer_const_constructors
+    - prefer_const_declarations
+    - always_declare_return_types
+    - avoid_print
+    - type_annotate_public_apis
+    - unawaited_futures
+    - sort_pub_dependencies
+    - slash_for_doc_comments
+    - package_api_docs
+
