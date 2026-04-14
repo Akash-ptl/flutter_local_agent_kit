@@ -24,9 +24,10 @@ dependencies:
   dio: ^5.4.1
   flutter:
     sdk: flutter
-  flutter_markdown: ^0.7.3
+  flutter_markdown_plus: ^1.0.7
   google_generative_ai: ^0.4.5
   llamadart: ^0.6.10
+  math_expressions: ^3.1.0
   mobile_rag_engine: ^0.17.0
   path: ^1.9.1
   path_provider: ^2.1.5

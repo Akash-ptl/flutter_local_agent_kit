@@ -1,3 +1,5 @@
+import 'package:math_expressions/math_expressions.dart';
+
 /// Base class for all tools the agent can use.
 /// 
 /// Tools allow the agent to interact with the outside world (APIs, Math, etc.)
@@ -35,8 +37,19 @@ class CalculatorTool extends BaseTool {
 
   @override
   Future<String> call(Map<String, dynamic> arguments) async {
-    final expression = arguments['expression'] as String;
-    return "Result for $expression is calculated internally.";
+    final expression = (arguments['expression'] as String?) ?? '';
+    if (expression.isEmpty) return 'Error: Empty expression';
+    
+    try {
+      final p = ShuntingYardParser();
+      final exp = p.parse(expression);
+      final cm = ContextModel();
+      // ignore: deprecated_member_use
+      final result = exp.evaluate(EvaluationType.REAL, cm);
+      return result.toString();
+    } catch (e) {
+      return "Error evaluating expression: $e";
+    }
   }
 }
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_local_agent_kit/src/core/models.dart';
 
 /// A high-performance, markdown-capable chat interface for AI agents.
