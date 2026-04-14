@@ -16,6 +16,9 @@ import 'package:flutter_local_agent_kit/src/utils/model_manager.dart';
 /// It orchestrates LLM inference, RAG knowledge retrieval, and autonomous agents.
 /// {@endtemplate}
 class FlutterLocalAgentKit {
+  /// Internal constructor for [FlutterLocalAgentKit].
+  FlutterLocalAgentKit();
+
   LlamaEngine? _llmEngine;
   MobileRag? _ragEngine;
   
@@ -46,6 +49,8 @@ class FlutterLocalAgentKit {
   /// 
   /// [modelPath] is the absolute path to the GGUF model file.
   /// [template] defines the prompt format (defaults to Llama 3).
+  /// [contextSize] determines the LLM memory window (defaults to 4096).
+  /// [gpuLayers] determines the number of layers offloaded to the GPU (defaults to 32).
   Future<void> initialize({
     required String modelPath,
     PromptTemplate? template,
@@ -53,13 +58,20 @@ class FlutterLocalAgentKit {
     String tokenizerAsset = 'assets/ai/tokenizer.json',
     String modelAsset = 'assets/ai/embeddings.onnx',
     List<BaseTool>? customTools,
+    int contextSize = 4096,
+    int gpuLayers = 32,
   }) async {
     if (_status == KitStatus.initializing) return;
     _updateStatus(KitStatus.initializing);
 
     try {
       // 1. Initialize LLM (Critical Core)
-      await initializeLlm(modelPath: modelPath, template: template ?? Llama3Template());
+      await initializeLlm(
+        modelPath: modelPath, 
+        template: template ?? Llama3Template(),
+        contextSize: contextSize,
+        gpuLayers: gpuLayers,
+      );
       
       // 2. Attempt RAG Initialization (Optional Enhancement)
       try {
@@ -91,13 +103,15 @@ class FlutterLocalAgentKit {
   Future<void> initializeLlm({
     required String modelPath,
     required PromptTemplate template,
+    int contextSize = 4096,
+    int gpuLayers = 32,
   }) async {
     _llmEngine = LlamaEngine(LlamaBackend()); 
     await _llmEngine!.loadModel(
       modelPath,
-      modelParams: const ModelParams(
-        contextSize: 4096,
-        gpuLayers: 32,
+      modelParams: ModelParams(
+        contextSize: contextSize,
+        gpuLayers: gpuLayers,
       ),
     );
     _llmService = LlmService(engine: _llmEngine!, template: template);

@@ -28,6 +28,9 @@ class ModelDefinition {
 
 /// A robust utility for managing local GGUF model files.
 class ModelManager {
+  /// Internal constructor for [ModelManager].
+  ModelManager();
+
   final Dio _dio = Dio();
 
   /// Returns the local directory where models are persisted.

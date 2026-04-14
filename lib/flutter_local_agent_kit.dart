@@ -1,3 +1,9 @@
+/// A production-ready, offline-first AI framework for Flutter.
+///
+/// This library provides the central entry point for on-device AI orchestration,
+/// including LLM inference, local RAG retrieval, and autonomous agents.
+library flutter_local_agent_kit;
+
 export 'package:flutter_local_agent_kit/src/core/kit_facade.dart';
 export 'package:flutter_local_agent_kit/src/core/models.dart';
 export 'package:flutter_local_agent_kit/src/ui/chat_view.dart';

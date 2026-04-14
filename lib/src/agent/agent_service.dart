@@ -15,8 +15,16 @@ class AgentService {
   /// Optional custom instructions for the agent's persona.
   final String? customInstructions;
 
+  /// Maximum number of Reason-Act iterations.
+  final int maxIterations;
+
   /// Creates an [AgentService].
-  AgentService(this.llm, this.tools, {this.customInstructions});
+  AgentService(
+    this.llm, 
+    this.tools, {
+    this.customInstructions, 
+    this.maxIterations = 5,
+  });
 
   String _buildSystemPrompt() {
     final toolsDesc = tools.map((t) => '- ${t.name}: ${t.description}. Params: ${jsonEncode(t.parameterSchema)}').join('\n');
@@ -35,7 +43,7 @@ You have access to specialized tools to assist the user accurately.
    Final Answer: [Your response to the user]
 
 4. Never hallucinate observations. Only use the data provided in the 'Observation' sections.
-5. Be concise and professional.
+5. Provide the 'Final Answer' only after you have gathered all necessary information.
 
 # AVAILABLE TOOLS:
 $toolsDesc
@@ -51,8 +59,6 @@ Begin!""";
       AgentChatMessage.user(query),
     ];
 
-    int maxIterations = 3;
-    
     for (int i = 0; i < maxIterations; i++) {
       final prompt = llm.format(conversation);
       
@@ -66,56 +72,59 @@ Begin!""";
         return;
       }
 
-      if (fullResponse.contains('Action:')) {
-        final toolName = _parseAction(fullResponse);
-        final toolInput = _parseInput(fullResponse);
+      final action = _parseAction(fullResponse);
+      if (action != null) {
+        final toolName = action.name;
+        final toolInput = action.input;
         
-        if (toolName != null) {
-          try {
-            final tool = tools.firstWhere((t) => t.name == toolName);
-            yield "Thinking (using ${tool.name})...";
-            
-            final observation = await tool.call(toolInput);
-            final observationStr = observation;
-
-            
-            conversation.add(AgentChatMessage.assistant(fullResponse));
-            conversation.add(AgentChatMessage.system("Observation: $observationStr"));
-            
-            continue; 
-          } catch (e) {
-            yield "Error using $toolName: $e";
-            return;
-          }
+        try {
+          final tool = tools.firstWhere((t) => t.name == toolName);
+          yield "Thinking (using ${tool.name})...";
+          
+          final observation = await tool.call(toolInput);
+          
+          conversation.add(AgentChatMessage.assistant(fullResponse));
+          conversation.add(AgentChatMessage.system("Observation: $observation"));
+          
+          continue; 
+        } catch (e) {
+          yield "Error using $toolName: $e";
+          return;
         }
       }
 
-      
-      yield fullResponse;
+      // If no valid action or answer found, yield the raw response and stop
+      yield fullResponse.replaceAll('Thought:', '').trim();
       return;
     }
+    
+    yield "I've reached my maximum reasoning limit without a final answer.";
   }
 
-  String? _parseAction(String text) {
-    final match = RegExp(r'Action: (.*)').firstMatch(text);
-    if (match == null) return null;
-    return match.group(1)?.trim();
-  }
-
-
-
-  Map<String, dynamic> _parseInput(String text) {
-    final match = RegExp(r'Action Input: (.*)').firstMatch(text);
-    final jsonStr = match?.group(1)?.trim() ?? '{}';
+  _ParsedAction? _parseAction(String text) {
     try {
-      final decoded = json.decode(jsonStr);
-      if (decoded is Map) {
-        return Map<String, dynamic>.from(decoded);
+      final actionMatch = RegExp(r'Action:\s*(.*)').firstMatch(text);
+      final inputMatch = RegExp(r'Action Input:\s*(\{.*\})', dotAll: true).firstMatch(text);
+      
+      if (actionMatch != null && inputMatch != null) {
+        final name = actionMatch.group(1)?.trim() ?? '';
+        var jsonStr = inputMatch.group(1)?.trim() ?? '{}';
+        
+        // Handle LLM adding code block markers
+        jsonStr = jsonStr.replaceAll('```json', '').replaceAll('```', '').trim();
+        
+        final input = Map<String, dynamic>.from(json.decode(jsonStr) as Map);
+        return _ParsedAction(name, input);
       }
-      return {};
-    } catch (e) {
-      return {};
+    } catch (_) {
+      // Return null on parsing failure to fallback to raw response
     }
+    return null;
   }
+}
 
+class _ParsedAction {
+  final String name;
+  final Map<String, dynamic> input;
+  _ParsedAction(this.name, this.input);
 }

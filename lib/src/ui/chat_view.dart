@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:markdown/markdown.dart' as md;
 import 'package:flutter_local_agent_kit/src/core/models.dart';
 
 /// A high-performance, markdown-capable chat interface for AI agents.
@@ -141,9 +143,20 @@ class _AgentChatViewState extends State<AgentChatView> {
                         child: MarkdownBody(
                           data: message.content,
                           selectable: true,
+                          builders: {
+                            'code': CodeBlockBuilder(context),
+                          },
                           styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
                             p: theme.textTheme.bodyMedium?.copyWith(
                               color: isUser ? Colors.white : theme.colorScheme.onSurfaceVariant,
+                            ),
+                            code: theme.textTheme.bodySmall?.copyWith(
+                              backgroundColor: Colors.transparent,
+                              fontFamily: 'monospace',
+                            ),
+                            codeblockDecoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                         ),
@@ -247,5 +260,83 @@ class _AgentChatViewState extends State<AgentChatView> {
     _scrollController.dispose();
     _isProcessing.dispose();
     super.dispose();
+  }
+}
+
+/// Custom builder for code blocks to add a copy button.
+class CodeBlockBuilder extends MarkdownElementBuilder {
+  /// The [BuildContext] used for accessing themes and showing snackbars.
+  final BuildContext context;
+  
+  /// Creates a [CodeBlockBuilder].
+  CodeBlockBuilder(this.context);
+
+  @override
+  Widget? visitElementAfter(md.Element element, TextStyle? preferredStyle) {
+    final textContent = element.textContent;
+    final isCodeBlock = element.tag == 'pre' || (element.tag == 'code' && textContent.contains('\n'));
+
+    if (!isCodeBlock) return null;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Code',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                ),
+                InkWell(
+                  onTap: () {
+                    Clipboard.setData(ClipboardData(text: textContent));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Copied to clipboard'), duration: Duration(seconds: 1)),
+                    );
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.copy_rounded, size: 14, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Copy',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Text(
+              textContent,
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
