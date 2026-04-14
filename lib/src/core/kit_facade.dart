@@ -58,13 +58,22 @@ class FlutterLocalAgentKit {
     _updateStatus(KitStatus.initializing);
 
     try {
+      // 1. Initialize LLM (Critical Core)
       await initializeLlm(modelPath: modelPath, template: template ?? Llama3Template());
-      await initializeRag(
-        storagePath: ragDatabasePath,
-        tokenizerAsset: tokenizerAsset,
-        modelAsset: modelAsset,
-      );
       
+      // 2. Attempt RAG Initialization (Optional Enhancement)
+      try {
+        await initializeRag(
+          storagePath: ragDatabasePath,
+          tokenizerAsset: tokenizerAsset,
+          modelAsset: modelAsset,
+        );
+      } catch (e) {
+        // RAG is skipped if assets are missing or incompatible, but LLM remains operational.
+        // In a production app, you might log this to a crash reporting service.
+      }
+      
+      // 3. Setup Agent with LLM (Always possible once LLM service is up)
       _agentService = AgentService(
         _llmService!, 
         customTools ?? [CalculatorTool(), DateTimeTool()],
@@ -76,6 +85,7 @@ class FlutterLocalAgentKit {
       rethrow;
     }
   }
+
 
   /// Individually initializes the LLM engine for light-weight chat scenarios.
   Future<void> initializeLlm({
@@ -122,16 +132,30 @@ class FlutterLocalAgentKit {
     _statusController.add(newStatus);
   }
 
-  /// Executes an autonomous reasoning loop (Thought -> Action -> Observation).
-  Stream<String> runAgent(String query) {
-    if (!isReady) throw Exception('Kit is not ready (Status: $_status)');
-    return _agentService!.run(query);
+  /// Executes an autonomous reasoning loop.
+  /// 
+  /// [systemPrompt] allows overriding the default agent instructions.
+  Stream<String> runAgent(String query, {String? systemPrompt}) {
+    if (!isReady) throw Exception('Kit is not ready');
+    
+    // Create a temporary service instance if a custom prompt is provided
+    final service = systemPrompt != null 
+        ? AgentService(_llmService!, _agentService!.tools, customInstructions: systemPrompt)
+        : _agentService!;
+        
+    return service.run(query);
   }
+
 
   /// Performs a high-speed RAG-augmented query against the local knowledge base.
   Stream<String> askStream(String query, {List<AgentChatMessage> history = const []}) async* {
     if (!isReady) throw Exception('Kit is not ready');
-    final context = await _ragService!.retrieveContext(query);
+    
+    // Attempt to retrieve context only if RAG is available.
+    final context = _ragService != null 
+        ? await _ragService!.retrieveContext(query)
+        : <String>[];
+        
     final messages = [
       if (context.isNotEmpty)
         AgentChatMessage.system('Context:\n${context.join('\n')}'),

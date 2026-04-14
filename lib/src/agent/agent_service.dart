@@ -12,25 +12,36 @@ class AgentService {
   /// The list of tools available to the agent.
   final List<BaseTool> tools;
 
+  /// Optional custom instructions for the agent's persona.
+  final String? customInstructions;
+
   /// Creates an [AgentService].
-  AgentService(this.llm, this.tools);
+  AgentService(this.llm, this.tools, {this.customInstructions});
 
   String _buildSystemPrompt() {
     final toolsDesc = tools.map((t) => '- ${t.name}: ${t.description}. Params: ${jsonEncode(t.parameterSchema)}').join('\n');
     
-    return """You are an autonomous agent. You can use tools to answer questions.
-Available Tools:
+    return """${customInstructions ?? 'You are a highly efficient autonomous AI agent running locally.'}
+You have access to specialized tools to assist the user accurately.
+
+# RULES:
+1. ALWAYS start with 'Thought:' to describe your reasoning.
+2. To use a tool, use this EXACT format:
+   Thought: [Reasoning]
+   Action: [tool_name]
+   Action Input: [json_arguments]
+
+3. To finish, use this format:
+   Final Answer: [Your response to the user]
+
+4. Never hallucinate observations. Only use the data provided in the 'Observation' sections.
+5. Be concise and professional.
+
+# AVAILABLE TOOLS:
 $toolsDesc
 
-To use a tool, use the following format:
-Thought: [Reasoning about what to do]
-Action: [tool_name]
-Action Input: [json_arguments]
-
-When you have the final answer, use:
-Final Answer: [The actual answer to the user]
-
 Begin!""";
+
   }
 
   /// Runs the agentic loop for a given query.
@@ -60,17 +71,24 @@ Begin!""";
         final toolInput = _parseInput(fullResponse);
         
         if (toolName != null) {
-          final tool = tools.firstWhere((t) => t.name == toolName);
-          yield "Thinking (using ${tool.name})...";
-          
-          final observation = await tool.call(toolInput);
-          
-          conversation.add(AgentChatMessage.assistant(fullResponse));
-          conversation.add(AgentChatMessage.system("Observation: $observation"));
-          
-          continue; 
+          try {
+            final tool = tools.firstWhere((t) => t.name == toolName);
+            yield "Thinking (using ${tool.name})...";
+            
+            final observation = await tool.call(toolInput);
+            final observationStr = observation?.toString() ?? "No output received from tool.";
+            
+            conversation.add(AgentChatMessage.assistant(fullResponse));
+            conversation.add(AgentChatMessage.system("Observation: $observationStr"));
+            
+            continue; 
+          } catch (e) {
+            yield "Error using $toolName: $e";
+            return;
+          }
         }
       }
+
       
       yield fullResponse;
       return;
@@ -87,9 +105,13 @@ Begin!""";
     final jsonStr = match?.group(1)?.trim() ?? '{}';
     try {
       final decoded = json.decode(jsonStr);
-      return Map<String, dynamic>.from(decoded as Map);
+      if (decoded is Map) {
+        return Map<String, dynamic>.from(decoded);
+      }
+      return {};
     } catch (e) {
       return {};
     }
   }
+
 }

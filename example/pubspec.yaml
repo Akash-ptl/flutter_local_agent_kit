@@ -12,6 +12,9 @@ dependencies:
   flutter_local_agent_kit:
     path: ../
 
+dependency_overrides:
+  flutter_rust_bridge: 2.11.1
+
 dev_dependencies:
   flutter_lints: ^5.0.0
   flutter_test:
@@ -19,3 +22,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/ai/
+    - assets/ai/tokenizer.json
+    - assets/ai/embeddings.onnx
+

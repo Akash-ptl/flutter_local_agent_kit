@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:flutter_local_agent_kit/flutter_local_agent_kit.dart';
-
+import 'package:flutter_local_agent_kit/src/core/models.dart';
 
 /// A high-performance, markdown-capable chat interface for AI agents.
 class AgentChatView extends StatefulWidget {
-  /// The initialized agent kit to use for queries.
-  final FlutterLocalAgentKit agentKit;
+  /// The callback invoked when a user sends a message. 
+  /// Should return a stream of response tokens.
+  final Stream<String> Function(String query) onMessage;
   
+  /// Optional welcome message displayed when the chat starts.
+  final String? welcomeMessage;
+
+  /// Optional list of suggestion chips to show when starting a conversation.
+  final List<String>? suggestions;
+
   /// The title displayed in the AppBar.
   final String title;
   
@@ -17,10 +23,13 @@ class AgentChatView extends StatefulWidget {
   /// Creates an [AgentChatView].
   const AgentChatView({
     super.key,
-    required this.agentKit,
+    required this.onMessage,
+    this.welcomeMessage,
+    this.suggestions,
     this.title = 'AI Assistant',
     this.accentColor,
   });
+
 
   @override
   State<AgentChatView> createState() => _AgentChatViewState();
@@ -31,6 +40,14 @@ class _AgentChatViewState extends State<AgentChatView> {
   final List<AgentChatMessage> _messages = [];
   final ScrollController _scrollController = ScrollController();
   final ValueNotifier<bool> _isProcessing = ValueNotifier(false);
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.welcomeMessage != null) {
+      _messages.add(AgentChatMessage.assistant(widget.welcomeMessage!));
+    }
+  }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -63,7 +80,7 @@ class _AgentChatViewState extends State<AgentChatView> {
     });
 
     try {
-      await for (final token in widget.agentKit.askStream(text, history: _messages)) {
+      await for (final token in widget.onMessage(text)) {
         responseBuffer += token;
         final index = _messages.indexWhere((m) => m.id == assistantMessageId);
         if (index != -1) {
@@ -92,73 +109,97 @@ class _AgentChatViewState extends State<AgentChatView> {
     final theme = Theme.of(context);
     final accent = widget.accentColor ?? theme.colorScheme.primary;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                final isUser = message.role == MessageRole.user;
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            itemCount: _messages.length,
+            itemBuilder: (context, index) {
+              final message = _messages[index];
+              final isUser = message.role == MessageRole.user;
 
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (!isUser) _buildAvatar(Icons.smart_toy_rounded, accent),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: isUser ? accent : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(16).copyWith(
-                              bottomRight: isUser ? const Radius.circular(0) : null,
-                              bottomLeft: !isUser ? const Radius.circular(0) : null,
-                            ),
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (!isUser) _buildAvatar(Icons.smart_toy_rounded, accent),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isUser ? accent : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(16).copyWith(
+                            bottomRight: isUser ? const Radius.circular(0) : null,
+                            bottomLeft: !isUser ? const Radius.circular(0) : null,
                           ),
-                          child: MarkdownBody(
-                            data: message.content,
-                            selectable: true,
-                            styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
-                              p: theme.textTheme.bodyMedium?.copyWith(
-                                color: isUser ? Colors.white : theme.colorScheme.onSurfaceVariant,
-                              ),
+                        ),
+                        child: MarkdownBody(
+                          data: message.content,
+                          selectable: true,
+                          styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
+                            p: theme.textTheme.bodyMedium?.copyWith(
+                              color: isUser ? Colors.white : theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      if (isUser) _buildAvatar(Icons.person_rounded, Colors.grey),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-          ValueListenableBuilder<bool>(
-            valueListenable: _isProcessing,
-            builder: (context, processing, _) {
-              if (processing && _messages.isNotEmpty && _messages.last.content.isEmpty) {
-                return const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: LinearProgressIndicator(minHeight: 2),
-                );
-              }
-              return const SizedBox.shrink();
+                    ),
+                    const SizedBox(width: 8),
+                    if (isUser) _buildAvatar(Icons.person_rounded, Colors.grey),
+                  ],
+                ),
+              );
             },
           ),
-          _buildInputArea(theme, accent),
-        ],
+        ),
+        ValueListenableBuilder<bool>(
+          valueListenable: _isProcessing,
+          builder: (context, processing, _) {
+            if (processing && _messages.isNotEmpty && _messages.last.content.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: LinearProgressIndicator(minHeight: 2),
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        ),
+        if (widget.suggestions != null)
+          _buildSuggestions(theme, accent),
+
+        _buildInputArea(theme, accent),
+      ],
+    );
+  }
+
+  Widget _buildSuggestions(ThemeData theme, Color accent) {
+    return Container(
+      height: 50,
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: widget.suggestions!.length,
+        itemBuilder: (context, index) {
+          final suggestion = widget.suggestions![index];
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ActionChip(
+              label: Text(suggestion, style: const TextStyle(fontSize: 12)),
+              onPressed: () {
+                _controller.text = suggestion;
+                _sendMessage();
+              },
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            ),
+          );
+        },
       ),
     );
   }
@@ -170,7 +211,6 @@ class _AgentChatViewState extends State<AgentChatView> {
       child: Icon(icon, size: 18, color: color),
     );
   }
-
 
   Widget _buildInputArea(ThemeData theme, Color accent) {
     return Container(
@@ -187,7 +227,7 @@ class _AgentChatViewState extends State<AgentChatView> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                 ),
-                onSubmitted: (_) => _sendMessage(),
+                onSubmitted: (value) => _sendMessage(),
               ),
             ),
             const SizedBox(width: 8),

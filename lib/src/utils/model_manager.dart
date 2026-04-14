@@ -94,10 +94,10 @@ class ModelManager {
   /// A pre-curated list of high-performance models for 2026 hardware.
   static List<ModelDefinition> get recommendedModels => [
     ModelDefinition(
-      id: 'llama-3-8b-instruct',
-      name: 'Llama 3 (8B) - Balanced',
-      url: 'https://huggingface.co/lmstudio-community/Meta-Llama-3-8B-Instruct-GGUF/resolve/main/Meta-Llama-3-8B-Instruct-Q4_K_M.gguf',
-      estimatedSizeInBytes: 4920000000,
+      id: 'llama-3.2-1b-instruct',
+      name: 'Llama 3.2 (1B) - Best for Mobile',
+      url: 'https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf',
+      estimatedSizeInBytes: 742000000,
     ),
     ModelDefinition(
       id: 'phi-3-mini-4k',
@@ -106,4 +106,5 @@ class ModelManager {
       estimatedSizeInBytes: 2300000000,
     ),
   ];
+
 }
