@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+* **Lifecycle**: Reinitializing `FlutterLocalAgentKit` now disposes existing LLM and RAG sessions before recreating them.
+* **Reliability**: `Llama3Template` now serializes a single BOS token per prompt for correct multi-turn formatting.
+* **Capability State**: Added `isRagReady` and `ragInitializationError` so apps can detect LLM-only fallback when optional RAG startup fails.
+* **Testing**: Added regression coverage for prompt formatting, reinitialization cleanup, degraded RAG startup, and chat-stream error handling.
+* **UI**: `AgentChatView` now replaces failed response placeholders with a visible error message instead of leaving an empty assistant bubble.
+
+## 1.0.1
+
+* **Pub.dev Optimization**: Improved metadata, shortened description, and updated dependency constraints.
+* **Documentation**: Added missing library and constructor documentation to reach 100% coverage.
+* **Visuals**: Replaced placeholder screenshots with high-fidelity, premium Material 3 UI assets.
+* **Bug Fixes**: Switched to official `flutter_markdown` for improved stability.
+
 ## 1.0.0
 
 * **Initial Release**: Production-ready core for on-device AI.

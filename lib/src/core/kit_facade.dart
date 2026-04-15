@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'package:llamadart/llamadart.dart';
-import 'package:mobile_rag_engine/mobile_rag_engine.dart';
 import 'package:flutter_local_agent_kit/src/llm/llm_service.dart';
 import 'package:flutter_local_agent_kit/src/llm/prompt_templates.dart';
 import 'package:flutter_local_agent_kit/src/rag/rag_service.dart';
 import 'package:flutter_local_agent_kit/src/agent/agent_service.dart';
 import 'package:flutter_local_agent_kit/src/agent/tools.dart';
 import 'package:flutter_local_agent_kit/src/core/models.dart';
+import 'package:flutter_local_agent_kit/src/core/runtime_adapter.dart';
 import 'package:flutter_local_agent_kit/src/utils/model_manager.dart';
 
 
@@ -17,15 +16,18 @@ import 'package:flutter_local_agent_kit/src/utils/model_manager.dart';
 /// {@endtemplate}
 class FlutterLocalAgentKit {
   /// Internal constructor for [FlutterLocalAgentKit].
-  FlutterLocalAgentKit();
+  FlutterLocalAgentKit({
+    KitRuntimeAdapter? runtimeAdapter,
+  }) : _runtimeAdapter = runtimeAdapter ?? DefaultKitRuntimeAdapter();
 
-  LlamaEngine? _llmEngine;
-  MobileRag? _ragEngine;
-  
+  final KitRuntimeAdapter _runtimeAdapter;
+  LlmRuntimeSession? _llmSession;
+  RagRuntimeSession? _ragSession;
   LlmService? _llmService;
   RagService? _ragService;
   AgentService? _agentService;
   final ModelManager _modelManager = ModelManager();
+  Object? _ragInitializationError;
 
   final _statusController = StreamController<KitStatus>.broadcast();
   KitStatus _status = KitStatus.uninitialized;
@@ -45,6 +47,12 @@ class FlutterLocalAgentKit {
   /// The [ModelManager] responsible for background model downloads and integrity checks.
   ModelManager get models => _modelManager;
 
+  /// Returns whether the optional RAG subsystem is available.
+  bool get isRagReady => _ragService != null;
+
+  /// The most recent RAG initialization error, if startup fell back to LLM-only mode.
+  Object? get ragInitializationError => _ragInitializationError;
+
   /// Boots all AI services (LLM and RAG) in a single call.
   /// 
   /// [modelPath] is the absolute path to the GGUF model file.
@@ -62,7 +70,13 @@ class FlutterLocalAgentKit {
     int gpuLayers = 32,
   }) async {
     if (_status == KitStatus.initializing) return;
+
+    if (_status != KitStatus.uninitialized) {
+      await _disposeResources();
+    }
+
     _updateStatus(KitStatus.initializing);
+    _ragInitializationError = null;
 
     try {
       // 1. Initialize LLM (Critical Core)
@@ -81,8 +95,9 @@ class FlutterLocalAgentKit {
           modelAsset: modelAsset,
         );
       } catch (e) {
-        // RAG is skipped if assets are missing or incompatible, but LLM remains operational.
-        // In a production app, you might log this to a crash reporting service.
+        // RAG is optional, but callers should be able to detect when startup fell back
+        // to LLM-only mode and decide whether to disable knowledge features.
+        _ragInitializationError = e;
       }
       
       // 3. Setup Agent with LLM (Always possible once LLM service is up)
@@ -106,15 +121,13 @@ class FlutterLocalAgentKit {
     int contextSize = 4096,
     int gpuLayers = 32,
   }) async {
-    _llmEngine = LlamaEngine(LlamaBackend()); 
-    await _llmEngine!.loadModel(
-      modelPath,
-      modelParams: ModelParams(
-        contextSize: contextSize,
-        gpuLayers: gpuLayers,
-      ),
+    _llmSession = await _runtimeAdapter.initializeLlm(
+      modelPath: modelPath,
+      template: template,
+      contextSize: contextSize,
+      gpuLayers: gpuLayers,
     );
-    _llmService = LlmService(engine: _llmEngine!, template: template);
+    _llmService = _llmSession!.service;
   }
 
   /// Individually initializes the RAG engine for knowledge management.
@@ -123,27 +136,35 @@ class FlutterLocalAgentKit {
     String tokenizerAsset = 'assets/ai/tokenizer.json',
     String modelAsset = 'assets/ai/embeddings.onnx',
   }) async {
-    await MobileRag.initialize(
+    _ragSession = await _runtimeAdapter.initializeRag(
+      storagePath: storagePath,
       tokenizerAsset: tokenizerAsset,
       modelAsset: modelAsset,
-      databaseName: storagePath ?? 'agent_kit.sqlite',
     );
-    _ragEngine = MobileRag.instance;
-    _ragService = RagService(_ragEngine!);
+    _ragService = _ragSession!.service;
   }
 
   /// Ingests a local file into the RAG engine.
   Future<void> ingestFile(String filePath) async {
-    if (_ragEngine == null) throw Exception('RAG engine not initialized');
-    await _ragEngine!.addDocumentFromFile(
-      filePath,
-      metadata: 'Source: Local File',
-    );
+    if (_ragSession == null) throw Exception('RAG engine not initialized');
+    await _ragSession!.ingestFile(filePath);
   }
 
   void _updateStatus(KitStatus newStatus) {
     _status = newStatus;
     _statusController.add(newStatus);
+  }
+
+  Future<void> _disposeResources() async {
+    await _llmSession?.dispose();
+    await _ragSession?.dispose();
+    _llmSession = null;
+    _ragSession = null;
+    _llmService = null;
+    _ragService = null;
+    _agentService = null;
+    _ragInitializationError = null;
+    _status = KitStatus.uninitialized;
   }
 
   /// Executes an autonomous reasoning loop.
@@ -181,11 +202,7 @@ class FlutterLocalAgentKit {
 
   /// Closes all native engines and releases all held RAM.
   Future<void> dispose() async {
-    await _llmEngine?.dispose();
-    await MobileRag.dispose(); 
+    await _disposeResources();
     await _statusController.close();
-    _llmEngine = null;
-    _ragEngine = null;
-    _status = KitStatus.uninitialized;
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:flutter_local_agent_kit/src/core/models.dart';
 
@@ -97,6 +97,15 @@ class _AgentChatViewState extends State<AgentChatView> {
       }
     } catch (e) {
       if (mounted) {
+        final index = _messages.indexWhere((m) => m.id == assistantMessageId);
+        if (index != -1) {
+          setState(() {
+            _messages[index] = AgentChatMessage.assistant(
+              'Sorry, something went wrong while generating a response.\n\nError: $e',
+              id: assistantMessageId,
+            );
+          });
+        }
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     } finally {
@@ -271,6 +280,7 @@ class CodeBlockBuilder extends MarkdownElementBuilder {
   /// Creates a [CodeBlockBuilder].
   CodeBlockBuilder(this.context);
 
+  /// Builds the code block widget with a custom layout and copy button.
   @override
   Widget? visitElementAfter(md.Element element, TextStyle? preferredStyle) {
     final textContent = element.textContent;

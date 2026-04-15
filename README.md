@@ -26,9 +26,21 @@ final kit = FlutterLocalAgentKit();
 
 await kit.initialize(
   modelPath: '/path/to/llama-3.2-1b.gguf',
-  systemPrompt: "You are a helpful coding assistant.",
 );
 ```
+
+### 1a. Detect LLM-Only Fallback
+```dart
+await kit.initialize(modelPath: '/path/to/llama-3.2-1b.gguf');
+
+if (!kit.isRagReady) {
+  debugPrint('RAG unavailable: ${kit.ragInitializationError}');
+}
+```
+
+The kit can still become `ready` when the optional RAG subsystem fails to boot.
+Use `isRagReady` and `ragInitializationError` to disable knowledge features or
+surface a degraded-mode message in your app.
 
 ### 2. Run an Autonomous Agent
 ```dart
@@ -45,6 +57,17 @@ AgentChatView(
   welcomeMessage: "Hello! I am your local AI agent.",
 )
 ```
+
+### 4. Inject a Custom Runtime Adapter
+```dart
+final kit = FlutterLocalAgentKit(
+  runtimeAdapter: MyKitRuntimeAdapter(),
+);
+```
+
+`KitRuntimeAdapter` lets you swap how LLM and RAG sessions are created. This is
+useful for testing, custom native integrations, or controlling engine lifecycle
+outside the default adapter.
 
 ---
 

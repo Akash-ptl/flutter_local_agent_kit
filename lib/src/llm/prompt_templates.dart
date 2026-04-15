@@ -19,10 +19,11 @@ class Llama3Template extends PromptTemplate {
 
   @override
   String formatMessages(List<AgentChatMessage> messages) {
-    final buffer = StringBuffer();
+    final buffer = StringBuffer('<|begin_of_text|>');
+
     for (final msg in messages) {
       final roleName = msg.role.name;
-      buffer.write('<|begin_of_text|><|start_header_id|>$roleName<|end_header_id|>\n\n');
+      buffer.write('<|start_header_id|>$roleName<|end_header_id|>\n\n');
       buffer.write('${msg.content}<|eot_id|>');
     }
 
