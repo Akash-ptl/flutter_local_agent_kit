@@ -1,17 +1,19 @@
-# flutter_local_agent_kit_example
+# flutter_local_agent_kit Example
 
-A new Flutter project.
+This example shows how to:
 
-## Getting Started
+- download or reuse a local GGUF model
+- initialize `FlutterLocalAgentKit`
+- render the built-in `AgentChatView`
+- surface a simple offline-first local agent experience
 
-This project is a starting point for a Flutter application.
+## Run the example
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+flutter pub get
+flutter run
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The example app expects local RAG assets from `example/assets/ai/` and will
+download the recommended demo model if it is not already available on the
+device.

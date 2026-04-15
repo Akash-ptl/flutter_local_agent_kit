@@ -23,6 +23,9 @@ class AgentChatView extends StatefulWidget {
   final Color? accentColor;
 
   /// Creates an [AgentChatView].
+  ///
+  /// The widget renders a simple chat transcript and streams assistant output
+  /// from [onMessage] directly into the last assistant bubble.
   const AgentChatView({
     super.key,
     required this.onMessage,
@@ -32,8 +35,8 @@ class AgentChatView extends StatefulWidget {
     this.accentColor,
   });
 
-
   @override
+  /// Creates the mutable state backing the chat transcript and input controls.
   State<AgentChatView> createState() => _AgentChatViewState();
 }
 

@@ -15,7 +15,11 @@ import 'package:flutter_local_agent_kit/src/utils/model_manager.dart';
 /// It orchestrates LLM inference, RAG knowledge retrieval, and autonomous agents.
 /// {@endtemplate}
 class FlutterLocalAgentKit {
-  /// Internal constructor for [FlutterLocalAgentKit].
+  /// Creates the main entry point for local model inference, tools, and RAG.
+  ///
+  /// Provide a custom [runtimeAdapter] to override how native LLM and RAG
+  /// sessions are created, which is especially useful in tests or custom
+  /// embeddings/runtime integrations.
   FlutterLocalAgentKit({
     KitRuntimeAdapter? runtimeAdapter,
   }) : _runtimeAdapter = runtimeAdapter ?? DefaultKitRuntimeAdapter();
@@ -57,6 +61,11 @@ class FlutterLocalAgentKit {
   /// 
   /// [modelPath] is the absolute path to the GGUF model file.
   /// [template] defines the prompt format (defaults to Llama 3).
+  /// [ragDatabasePath] overrides the on-device database file used by the
+  /// optional RAG subsystem.
+  /// [tokenizerAsset] and [modelAsset] configure the RAG embedding assets.
+  /// [customTools] replaces the default calculator and time tools exposed to
+  /// the built-in agent loop.
   /// [contextSize] determines the LLM memory window (defaults to 4096).
   /// [gpuLayers] determines the number of layers offloaded to the GPU (defaults to 32).
   Future<void> initialize({
@@ -113,8 +122,10 @@ class FlutterLocalAgentKit {
     }
   }
 
-
   /// Individually initializes the LLM engine for light-weight chat scenarios.
+  ///
+  /// This is useful when consumers need manual control over the LLM lifecycle
+  /// and do not want to boot the optional RAG subsystem.
   Future<void> initializeLlm({
     required String modelPath,
     required PromptTemplate template,
@@ -131,6 +142,10 @@ class FlutterLocalAgentKit {
   }
 
   /// Individually initializes the RAG engine for knowledge management.
+  ///
+  /// [storagePath] overrides the database file name used by the local vector
+  /// store, while [tokenizerAsset] and [modelAsset] point to the embedding
+  /// assets required by `mobile_rag_engine`.
   Future<void> initializeRag({
     String? storagePath,
     String tokenizerAsset = 'assets/ai/tokenizer.json',
@@ -183,6 +198,8 @@ class FlutterLocalAgentKit {
 
 
   /// Performs a high-speed RAG-augmented query against the local knowledge base.
+  ///
+  /// Pass prior conversation [history] to preserve context across turns.
   Stream<String> askStream(String query, {List<AgentChatMessage> history = const []}) async* {
     if (!isReady) throw Exception('Kit is not ready');
     

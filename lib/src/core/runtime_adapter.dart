@@ -59,6 +59,7 @@ class RagRuntimeSession {
 /// Default adapter backed by the production native engines.
 class DefaultKitRuntimeAdapter implements KitRuntimeAdapter {
   @override
+  /// Creates the production `llamadart` engine and wraps it in a disposable session.
   Future<LlmRuntimeSession> initializeLlm({
     required String modelPath,
     required PromptTemplate template,
@@ -81,6 +82,7 @@ class DefaultKitRuntimeAdapter implements KitRuntimeAdapter {
   }
 
   @override
+  /// Creates the production `mobile_rag_engine` session and its file-ingestion hook.
   Future<RagRuntimeSession> initializeRag({
     String? storagePath,
     required String tokenizerAsset,
