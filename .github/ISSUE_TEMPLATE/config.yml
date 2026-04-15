@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Usage questions
+    url: https://github.com/akashptl/flutter_local_agent_kit/issues
+    about: Use the issue tracker for usage questions until discussions or a dedicated support channel is added.
