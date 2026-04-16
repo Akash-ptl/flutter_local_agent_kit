@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_local_agent_kit/flutter_local_agent_kit.dart';
 import 'package:flutter_local_agent_kit/src/llm/llm_service.dart';
-import 'package:flutter_local_agent_kit/src/llm/prompt_templates.dart';
 import 'package:flutter_local_agent_kit/src/rag/rag_service.dart';
 import 'package:llamadart/llamadart.dart';
 import 'package:mobile_rag_engine/mobile_rag_engine.dart';

@@ -9,3 +9,4 @@ export 'package:flutter_local_agent_kit/src/core/runtime_adapter.dart';
 export 'package:flutter_local_agent_kit/src/ui/chat_view.dart';
 export 'package:flutter_local_agent_kit/src/agent/tools.dart';
 export 'package:flutter_local_agent_kit/src/utils/model_manager.dart';
+export 'package:flutter_local_agent_kit/src/llm/prompt_templates.dart';

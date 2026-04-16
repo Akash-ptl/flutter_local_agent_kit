@@ -5,13 +5,6 @@ homepage: https://github.com/akashptl/flutter_local_agent_kit
 repository: https://github.com/akashptl/flutter_local_agent_kit
 issue_tracker: https://github.com/akashptl/flutter_local_agent_kit/issues
 
-screenshots:
-  - description: 'Stunning Material 3 Chat UI with resident LLM streaming.'
-    path: screenshots/chat_main.png
-  - description: 'Autonomous agent reasoning loop with tool execution.'
-    path: screenshots/agent_loop.png
-  - description: 'Offline RAG knowledge management studio.'
-    path: screenshots/rag_studio.png
 
 environment:
   sdk: ^3.3.0

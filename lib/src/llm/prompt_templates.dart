@@ -48,3 +48,57 @@ class SimplePromptTemplate extends PromptTemplate {
     return buffer.toString();
   }
 }
+
+/// The prompt template tuned for Google Gemma models.
+class GemmaTemplate extends PromptTemplate {
+  @override
+  String get stopSequence => '<end_of_turn>';
+
+  @override
+  String formatMessages(List<AgentChatMessage> messages) {
+    final buffer = StringBuffer();
+    for (final msg in messages) {
+      final role = msg.role == MessageRole.user ? 'user' : 'model';
+      buffer.write('<start_of_turn>$role\n${msg.content}<end_of_turn>\n');
+    }
+    buffer.write('<start_of_turn>model\n');
+    return buffer.toString();
+  }
+}
+
+/// The prompt template tuned for Mistral and Mixtral models.
+class MistralTemplate extends PromptTemplate {
+  @override
+  String get stopSequence => '</s>';
+
+  @override
+  String formatMessages(List<AgentChatMessage> messages) {
+    final buffer = StringBuffer();
+    for (final msg in messages) {
+      if (msg.role == MessageRole.user) {
+        buffer.write('[INST] ${msg.content} [/INST]');
+      } else {
+        buffer.write(' ${msg.content}</s> ');
+      }
+    }
+    return buffer.toString();
+  }
+}
+
+/// The standard ChatML template used by Qwen, OpenHermes, and others.
+class ChatMlTemplate extends PromptTemplate {
+  @override
+  String get stopSequence => '<|im_end|>';
+
+  @override
+  String formatMessages(List<AgentChatMessage> messages) {
+    final buffer = StringBuffer();
+    for (final msg in messages) {
+      final role = msg.role.name;
+      buffer.write('<|im_start|>$role\n${msg.content}<|im_end|>\n');
+    }
+    buffer.write('<|im_start|>assistant\n');
+    return buffer.toString();
+  }
+}
+

@@ -17,8 +17,9 @@ Run powerful autonomous AI agents completely offline in your Flutter apps.
 
 ## 📑 Table of Contents
 - [✨ Key Features](#-key-features)
-- [📱 Screenshots](#-screenshots)
-- [🚀 Quick Start / Installation](#-quick-start--installation)
+- [📖 Beginner's Glossary](#-beginners-glossary)
+- [🏗️ Architecture & How It Works](#️-architecture--how-it-works)
+- [🚀 Tutorial: Quick Start](#-tutorial-quick-start)
 - [⚡ Performance Benchmarks](#-performance-benchmarks)
 - [🛠️ Built-in Tools](#️-built-in-tools)
 - [🧠 Advanced Usage](#-advanced-usage)
@@ -37,88 +38,112 @@ Run powerful autonomous AI agents completely offline in your Flutter apps.
 - **🎨 Premium AgentChatView**: Ready-to-use Material 3 UI with markdown support, customizable suggestion chips, and real-time streaming.
 - **🔧 Built-in tools + easy custom tools**: Start instantly with calculators and date pickers, or easily subclass `BaseTool` for custom integrations.
 - **🧠 Multiple model support**: Seamlessly run state-of-the-art models like Llama 3.2, Gemma, and Mistral.
-- **🛡️ Fallback to LLM-only**: Automatically degrade gracefully when the RAG component is unavailable.
 - **🌐 Cross-platform support**: Built for modern Flutter targeting Desktop (macOS/Windows/Linux), Android, iOS, and Web.
 
 ---
 
-## 📱 Screenshots
 
-<p align="center">
-  <img src="screenshots/chat_main.png" width="30%" alt="Main Chat UI">
-  <img src="screenshots/agent_loop.png" width="30%" alt="Agent Reasoning Loop">
-  <img src="screenshots/rag_studio.png" width="30%" alt="RAG Studio">
-</p>
+## 📖 Beginner's Glossary
+
+New to AI on mobile devices? Here is a quick cheat sheet to understand what this package does:
+
+*   **LLM (Large Language Model):** The "brain". A neural network file (usually `.gguf` format) that can read text and generate text.
+*   **GGUF:** A file format for LLMs optimized for running on CPUs and mobile GPUs. You download a single `.gguf` file (e.g., from HuggingFace) and feed it into this package.
+*   **RAG (Retrieval-Augmented Generation):** A fancy way of saying "giving the LLM a local search engine". RAG lets the AI read your private PDFs, JSONs, or documents *before* answering a user's question, anchoring the AI in reality so it doesn't hallucinate.
+*   **Agent / Tool Calling:** Instead of just chatting, an "Agent" is given a set of Tools (like a Calculator, or a function that checks the Weather). Before answering the user, the AI *thinks*, decides it needs help, and "calls" the tool.
 
 ---
 
-## 🚀 Quick Start / Installation
+## 🏗️ Architecture & How It Works
 
+`flutter_local_agent_kit` acts as the grand orchestrator. You give it an LLM model, optional files for RAG, and define your tools. It automatically binds them together!
+
+```mermaid
+graph TD
+    UI[App UI / AgentChatView] -->|User Message| Kit[FlutterLocalAgentKit]
+    
+    subgraph Engine
+        Kit --> Agent[Agent Service]
+        Kit --> RAG[RAG Service]
+        Agent --> |Uses| LLM[LLM Engine]
+        Agent <--> |Calls Tools| Tools[BaseTools]
+        RAG --> |Context| Agent
+    end
+    
+    Tools -.-> |E.g. Math, DateTime, Custom| System(Device APIs)
+    LLM --> |Offline File| GGUF[(.gguf Model)]
+    RAG --> |Vector Search| VectorDB[(Local Db)]
+    
+    Agent --> |Streams Output| UI
+```
+
+1. **User asks a question** via the provided `AgentChatView`.
+2. **RAG Service** optionally scans the local database for relevant hidden context.
+3. **Agent Service** looks at the question, context, and available tools.
+4. **LLM** decides if a tool is needed. If true, it triggers your Dart code (e.g., getting GPS coordinates).
+5. **Final Output** streams back to the UI in beautiful Markdown!
+
+---
+
+## 🚀 Tutorial: Quick Start
+
+### Step 1: Install
 Add the package to your pubspec:
-
 ```bash
 flutter pub add flutter_local_agent_kit
 ```
 
-### Basic Initialization
+### Step 2: Get a Model (`.gguf`)
+To run this offline, you need a model file. The most popular lightweight models right now are Llama 3.2 1B or 3B.
+1. Go to [HuggingFace (e.g., Llama 3.2 1B GGUF)](https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF).
+2. Download a `Q4` or `Q8` quantised version (e.g., `Llama-3.2-1B-Instruct-Q4-K_M.gguf`).
+3. Place it in your device's documents directory during runtime, or ship it in your app's assets (though assets are large!).
+
+### Step 3: Boot the Kit
+Initialize the engine globally in your app.
+
 ```dart
 import 'package:flutter_local_agent_kit/flutter_local_agent_kit.dart';
 
 final kit = FlutterLocalAgentKit();
 
-await kit.initialize(
-  modelPath: '/path/to/llama-3.2-1b.gguf',
-);
+void startAi() async {
+  await kit.initialize(
+    // Point this to where you saved the GGUF file on the device
+    modelPath: '/storage/emulated/0/Download/Llama-3.2-1B-Instruct.gguf',
+  );
 
-// Fallback checking
-if (!kit.isRagReady) {
-  debugPrint('RAG unavailable: ${kit.ragInitializationError}');
+  // Optional: Check if RAG booted correctly
+  if (!kit.isRagReady) {
+    debugPrint('RAG unavailable: ${kit.ragInitializationError}');
+  }
 }
 ```
 
-### Running a Simple Agent
-```dart
-// Stream "Thought -> Action -> Observation -> Final Answer"
-kit.runAgent("Calculate my tax for 50k salary and tell me the time.")
-   .listen((chunk) {
-      print(chunk); 
-   });
-```
+### Step 4: Show the Chat UI
+We've built a premium chat interface so you don't have to! Just drop `AgentChatView` into your widget tree:
 
-### Using AgentChatView
 ```dart
 import 'package:flutter_local_agent_kit/ui.dart';
 
-AgentChatView(
-  onMessage: (query) => kit.runAgent(query),
-  suggestions: const [
-    '🕵️ Who are you?', 
-    '📅 Get Time', 
-    '🧮 Solve math'
-  ],
-  welcomeMessage: "Hello! I am your completely private, offline AI agent. How can I help you today?",
-)
-```
-
-### Adding Custom Tools
-```dart
-class WeatherTool extends BaseTool {
+class MyOfflineChatScreen extends StatelessWidget {
   @override
-  String get name => 'weather_tool';
-  
-  @override
-  String get description => 'Get the current weather for a location.';
-
-  @override
-  Future<String> execute(String input) async {
-    // In an offline setting, this might check a local weather cache 
-    // or trigger a specific device sensor.
-    return "The weather in $input is Sunny and 72°F.";
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('My Private AI')),
+      body: AgentChatView(
+        // The AgentChatView automatically passes the query to kit.runAgent!
+        onMessage: (query) => kit.runAgent(query),
+        suggestions: const [
+          '🕵️ What can you do?', 
+          '📅 What is the date?', 
+          '🧮 Solve 144 / 12'
+        ],
+        welcomeMessage: "Hello! I am your completely private, offline AI agent.",
+      ),
+    );
   }
 }
-
-// Pass tools to the agent directly
-kit.runAgent("What's the weather like?", tools: [WeatherTool()]);
 ```
 
 ---
@@ -139,26 +164,62 @@ Built natively on top of highly optimized inference wrappers (`llamadart`, Vulka
 
 ## 🛠️ Built-in Tools
 
-The kit comes pre-packaged with several essential tools to get your agent reasoning safely:
+Tools are pure Dart classes that give your AI superpowers. The package includes safe defaults:
 *   **🧮 Calculator**: High-precision math execution to prevent hallucinated numbers.
 *   **📅 DateTime**: Real-time context awareness so agents always know "when" it is.
-*   **🧑‍💻 Custom Tools**: Easily extend with the typed `BaseTool` class.
+
+### Writing a Custom Tool
+Want your AI to check the weather or fetch a user's location securely? Just extend `BaseTool`!
+
+```dart
+class WeatherTool extends BaseTool {
+  @override
+  String get name => 'weather_tool';
+  
+  @override
+  String get description => 'Get the current weather for a location.';
+
+  @override
+  Future<String> execute(String input) async {
+    // Write standard Dart code here! Look up a local database, or call an API.
+    return "The weather in $input is Sunny and 72°F.";
+  }
+}
+
+// Pass tools to the kit during initialization or runtime:
+kit.runAgent("What's the weather like in Tokyo?", tools: [WeatherTool()]);
+```
 
 ---
 
 ## 🧠 Advanced Usage
+
+### Using Custom Models (Gemma, Mistral, Qwen)
+By default, the package assumes you are using a **Llama 3** based model. If you download a different model type (e.g., Gemma or Mistral), you just need to pass the appropriate built-in template parameter so the engine knows how to talk to it!
+
+```dart
+await kit.initialize(
+  modelPath: '/path/to/gemma-4.gguf',
+  template: GemmaTemplate(), // Built-in templates: GemmaTemplate, MistralTemplate, ChatMlTemplate
+);
+```
 
 ### Custom Personas
 Easily inject custom system prompts to shape your agent's behavior:
 ```dart
 await kit.initialize(
   modelPath: '/path/to/model.gguf',
+);
+
+// Run the agent with a pirate persona just for this conversation!
+kit.runAgent(
+  "How are you?", 
   systemPrompt: "You are a seasoned pirate captain. Answer all queries in pirate speak."
 );
 ```
 
 ### Inject a Custom Runtime Adapter
-`KitRuntimeAdapter` lets you mock or swap how LLM and RAG sessions are created. Perfect for unit testing or custom low-level memory handling.
+`KitRuntimeAdapter` lets you mock or swap how LLM and RAG sessions are created. Perfect for unit testing.
 
 ```dart
 final kit = FlutterLocalAgentKit(
@@ -183,11 +244,11 @@ flutter run
 
 ## 🗺️ Roadmap / Future Plans
 
-- [ ] Built-in PDF/Text parsing for instant RAG ingestion
-- [ ] Multimodal model support (Local Vision)
-- [ ] Multi-agent orchestration (letting multiple agents talk to each other)
-- [ ] Persistent agent memory and conversational history saving
-- [ ] Support for native CoreML / NNAPI inference delegates 
+* ⬜ Built-in PDF/Text parsing for instant RAG ingestion
+* ⬜ Multimodal model support (Local Vision)
+* ⬜ Multi-agent orchestration (letting multiple agents talk to each other)
+* ⬜ Persistent agent memory and conversational history saving
+* ⬜ Support for native CoreML / NNAPI inference delegates 
 
 ---
 
