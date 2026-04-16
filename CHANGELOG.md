@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.2
+
+* **Documentation**: Overhauled `README.md` with beginner glossaries and architecture diagrams.
+* **Models**: Added built-in native support for `GemmaTemplate`, `MistralTemplate`, and `ChatMlTemplate`.
+* **Reliability**: Fixed missing library exports for prompt templates.
+* **Cleanup**: Removed deprecated screenshot assets for a leaner package footprint.
+
+
 ## 1.0.1
 
 * **Lifecycle**: Reinitializing `FlutterLocalAgentKit` now disposes existing LLM and RAG sessions before recreating them.
