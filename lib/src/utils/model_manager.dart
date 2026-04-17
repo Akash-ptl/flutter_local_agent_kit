@@ -7,13 +7,13 @@ import 'package:path/path.dart' as p;
 class ModelDefinition {
   /// Unique identifier for the model (e.g. 'llama-3-8b').
   final String id;
-  
+
   /// The direct URL to download the .gguf file.
   final String url;
-  
+
   /// Human-readable name for the model.
   final String name;
-  
+
   /// Estimated size in bytes for progress calculations.
   final int estimatedSizeInBytes;
 
@@ -56,14 +56,14 @@ class ModelManager {
   }
 
   /// Downloads a model from a remote URL to local storage.
-  /// 
+  ///
   /// Provides an optional [onProgress] callback returning 0.0 to 1.0.
   Future<File> downloadModel(
     ModelDefinition model, {
     void Function(double)? onProgress,
   }) async {
     final savePath = await getLocalPath(model.id);
-    
+
     try {
       await _dio.download(
         model.url,
@@ -74,7 +74,7 @@ class ModelManager {
           }
         },
       );
-      
+
       return File(savePath);
     } catch (e) {
       final partialFile = File(savePath);
@@ -96,18 +96,19 @@ class ModelManager {
 
   /// A pre-curated list of high-performance models for 2026 hardware.
   static List<ModelDefinition> get recommendedModels => [
-    ModelDefinition(
-      id: 'llama-3.2-1b-instruct',
-      name: 'Llama 3.2 (1B) - Best for Mobile',
-      url: 'https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf',
-      estimatedSizeInBytes: 742000000,
-    ),
-    ModelDefinition(
-      id: 'phi-3-mini-4k',
-      name: 'Phi-3 Mini (3.8B) - Fast',
-      url: 'https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf',
-      estimatedSizeInBytes: 2300000000,
-    ),
-  ];
-
+        ModelDefinition(
+          id: 'llama-3.2-1b-instruct',
+          name: 'Llama 3.2 (1B) - Best for Mobile',
+          url:
+              'https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf',
+          estimatedSizeInBytes: 742000000,
+        ),
+        ModelDefinition(
+          id: 'phi-3-mini-4k',
+          name: 'Phi-3 Mini (3.8B) - Fast',
+          url:
+              'https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf',
+          estimatedSizeInBytes: 2300000000,
+        ),
+      ];
 }

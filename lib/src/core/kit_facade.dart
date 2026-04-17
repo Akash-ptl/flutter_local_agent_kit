@@ -8,10 +8,9 @@ import 'package:flutter_local_agent_kit/src/core/models.dart';
 import 'package:flutter_local_agent_kit/src/core/runtime_adapter.dart';
 import 'package:flutter_local_agent_kit/src/utils/model_manager.dart';
 
-
 /// {@template flutter_local_agent_kit}
 /// The Flutter Local Agent Kit is the central entry point for on-device AI.
-/// 
+///
 /// It orchestrates LLM inference, RAG knowledge retrieval, and autonomous agents.
 /// {@endtemplate}
 class FlutterLocalAgentKit {
@@ -38,7 +37,7 @@ class FlutterLocalAgentKit {
 
   /// A stream that emits the current [KitStatus] as the engine boots.
   Stream<KitStatus> get statusStream => _statusController.stream;
-  
+
   /// The current state of the kit (uninitialized, ready, error, etc.)
   KitStatus get status => _status;
 
@@ -58,7 +57,7 @@ class FlutterLocalAgentKit {
   Object? get ragInitializationError => _ragInitializationError;
 
   /// Boots all AI services (LLM and RAG) in a single call.
-  /// 
+  ///
   /// [modelPath] is the absolute path to the GGUF model file.
   /// [template] defines the prompt format (defaults to Llama 3).
   /// [ragDatabasePath] overrides the on-device database file used by the
@@ -90,12 +89,12 @@ class FlutterLocalAgentKit {
     try {
       // 1. Initialize LLM (Critical Core)
       await initializeLlm(
-        modelPath: modelPath, 
+        modelPath: modelPath,
         template: template ?? Llama3Template(),
         contextSize: contextSize,
         gpuLayers: gpuLayers,
       );
-      
+
       // 2. Attempt RAG Initialization (Optional Enhancement)
       try {
         await initializeRag(
@@ -108,10 +107,10 @@ class FlutterLocalAgentKit {
         // to LLM-only mode and decide whether to disable knowledge features.
         _ragInitializationError = e;
       }
-      
+
       // 3. Setup Agent with LLM (Always possible once LLM service is up)
       _agentService = AgentService(
-        _llmService!, 
+        _llmService!,
         customTools ?? [CalculatorTool(), DateTimeTool()],
       );
 
@@ -183,31 +182,32 @@ class FlutterLocalAgentKit {
   }
 
   /// Executes an autonomous reasoning loop.
-  /// 
+  ///
   /// [systemPrompt] allows overriding the default agent instructions.
   Stream<String> runAgent(String query, {String? systemPrompt}) {
     if (!isReady) throw Exception('Kit is not ready');
-    
+
     // Create a temporary service instance if a custom prompt is provided
-    final service = systemPrompt != null 
-        ? AgentService(_llmService!, _agentService!.tools, customInstructions: systemPrompt)
+    final service = systemPrompt != null
+        ? AgentService(_llmService!, _agentService!.tools,
+            customInstructions: systemPrompt)
         : _agentService!;
-        
+
     return service.run(query);
   }
-
 
   /// Performs a high-speed RAG-augmented query against the local knowledge base.
   ///
   /// Pass prior conversation [history] to preserve context across turns.
-  Stream<String> askStream(String query, {List<AgentChatMessage> history = const []}) async* {
+  Stream<String> askStream(String query,
+      {List<AgentChatMessage> history = const []}) async* {
     if (!isReady) throw Exception('Kit is not ready');
-    
+
     // Attempt to retrieve context only if RAG is available.
-    final context = _ragService != null 
+    final context = _ragService != null
         ? await _ragService!.retrieveContext(query)
         : <String>[];
-        
+
     final messages = [
       if (context.isNotEmpty)
         AgentChatMessage.system('Context:\n${context.join('\n')}'),

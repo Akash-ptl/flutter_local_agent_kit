@@ -8,7 +8,7 @@ import 'package:flutter_local_agent_kit/src/core/models.dart';
 class AgentService {
   /// The LLM provider for the agent.
   final LlmService llm;
-  
+
   /// The list of tools available to the agent.
   final List<BaseTool> tools;
 
@@ -20,15 +20,18 @@ class AgentService {
 
   /// Creates an [AgentService].
   AgentService(
-    this.llm, 
+    this.llm,
     this.tools, {
-    this.customInstructions, 
+    this.customInstructions,
     this.maxIterations = 5,
   });
 
   String _buildSystemPrompt() {
-    final toolsDesc = tools.map((t) => '- ${t.name}: ${t.description}. Params: ${jsonEncode(t.parameterSchema)}').join('\n');
-    
+    final toolsDesc = tools
+        .map((t) =>
+            '- ${t.name}: ${t.description}. Params: ${jsonEncode(t.parameterSchema)}')
+        .join('\n');
+
     return """${customInstructions ?? 'You are a highly efficient autonomous AI agent running locally.'}
 You have access to specialized tools to assist the user accurately.
 
@@ -49,7 +52,6 @@ You have access to specialized tools to assist the user accurately.
 $toolsDesc
 
 Begin!""";
-
   }
 
   /// Runs the agentic loop for a given query.
@@ -61,7 +63,7 @@ Begin!""";
 
     for (int i = 0; i < maxIterations; i++) {
       final prompt = llm.format(conversation);
-      
+
       String fullResponse = "";
       await for (final token in llm.generateStream(prompt)) {
         fullResponse += token;
@@ -76,17 +78,18 @@ Begin!""";
       if (action != null) {
         final toolName = action.name;
         final toolInput = action.input;
-        
+
         try {
           final tool = tools.firstWhere((t) => t.name == toolName);
           yield "Thinking (using ${tool.name})...";
-          
+
           final observation = await tool.call(toolInput);
-          
+
           conversation.add(AgentChatMessage.assistant(fullResponse));
-          conversation.add(AgentChatMessage.system("Observation: $observation"));
-          
-          continue; 
+          conversation
+              .add(AgentChatMessage.system("Observation: $observation"));
+
+          continue;
         } catch (e) {
           yield "Error using $toolName: $e";
           return;
@@ -97,22 +100,24 @@ Begin!""";
       yield fullResponse.replaceAll('Thought:', '').trim();
       return;
     }
-    
+
     yield "I've reached my maximum reasoning limit without a final answer.";
   }
 
   _ParsedAction? _parseAction(String text) {
     try {
       final actionMatch = RegExp(r'Action:\s*(.*)').firstMatch(text);
-      final inputMatch = RegExp(r'Action Input:\s*(\{.*\})', dotAll: true).firstMatch(text);
-      
+      final inputMatch =
+          RegExp(r'Action Input:\s*(\{.*\})', dotAll: true).firstMatch(text);
+
       if (actionMatch != null && inputMatch != null) {
         final name = actionMatch.group(1)?.trim() ?? '';
         var jsonStr = inputMatch.group(1)?.trim() ?? '{}';
-        
+
         // Handle LLM adding code block markers
-        jsonStr = jsonStr.replaceAll('```json', '').replaceAll('```', '').trim();
-        
+        jsonStr =
+            jsonStr.replaceAll('```json', '').replaceAll('```', '').trim();
+
         final input = Map<String, dynamic>.from(json.decode(jsonStr) as Map);
         return _ParsedAction(name, input);
       }

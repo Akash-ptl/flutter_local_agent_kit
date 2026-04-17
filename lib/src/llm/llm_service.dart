@@ -7,7 +7,7 @@ import 'package:flutter_local_agent_kit/src/llm/prompt_templates.dart';
 class LlmService {
   /// The underlying raw llama engine.
   final LlamaEngine engine;
-  
+
   /// The template used for formatting prompts.
   final PromptTemplate template;
 
@@ -18,7 +18,8 @@ class LlmService {
   });
 
   /// Generates a streaming response for the given prompt.
-  Stream<String> generateStream(String prompt, {
+  Stream<String> generateStream(
+    String prompt, {
     double temperature = 0.7,
     int maxTokens = 1024,
   }) {

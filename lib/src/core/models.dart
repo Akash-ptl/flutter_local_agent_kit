@@ -4,16 +4,16 @@ import 'package:uuid/uuid.dart';
 class AgentChatMessage {
   /// Unique identifier for the message.
   final String id;
-  
+
   /// The text content of the message.
   final String content;
-  
+
   /// Whether the message is from the user, assistant, or system.
   final MessageRole role;
-  
+
   /// When the message was created.
   final DateTime timestamp;
-  
+
   /// Optional structured data associated with the message.
   final Map<String, dynamic>? metadata;
 
@@ -37,7 +37,8 @@ class AgentChatMessage {
   }
 
   /// Factory for creating an assistant message.
-  factory AgentChatMessage.assistant(String content, {String? id, Map<String, dynamic>? metadata}) {
+  factory AgentChatMessage.assistant(String content,
+      {String? id, Map<String, dynamic>? metadata}) {
     return AgentChatMessage(
       id: id ?? const Uuid().v4(),
       content: content,
@@ -62,13 +63,13 @@ class AgentChatMessage {
 enum MessageRole {
   /// System instructions.
   system,
-  
+
   /// Human user.
   user,
-  
+
   /// AI Assistant.
   assistant,
-  
+
   /// Execution result from a tool.
   tool,
 }
@@ -77,16 +78,16 @@ enum MessageRole {
 enum KitStatus {
   /// Not yet initialized.
   uninitialized,
-  
+
   /// Currently booting native engines.
   initializing,
-  
+
   /// All engines ready for inference.
   ready,
-  
+
   /// Currently processing a query.
   processing,
-  
+
   /// Initialization failed.
   error,
 }

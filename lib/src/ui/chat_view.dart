@@ -6,10 +6,10 @@ import 'package:flutter_local_agent_kit/src/core/models.dart';
 
 /// A high-performance, markdown-capable chat interface for AI agents.
 class AgentChatView extends StatefulWidget {
-  /// The callback invoked when a user sends a message. 
+  /// The callback invoked when a user sends a message.
   /// Should return a stream of response tokens.
   final Stream<String> Function(String query) onMessage;
-  
+
   /// Optional welcome message displayed when the chat starts.
   final String? welcomeMessage;
 
@@ -18,7 +18,7 @@ class AgentChatView extends StatefulWidget {
 
   /// The title displayed in the AppBar.
   final String title;
-  
+
   /// Primary color for user messages and UI elements.
   final Color? accentColor;
 
@@ -36,6 +36,7 @@ class AgentChatView extends StatefulWidget {
   });
 
   @override
+
   /// Creates the mutable state backing the chat transcript and input controls.
   State<AgentChatView> createState() => _AgentChatViewState();
 }
@@ -79,7 +80,7 @@ class _AgentChatViewState extends State<AgentChatView> {
 
     String responseBuffer = "";
     final assistantMessageId = DateTime.now().millisecondsSinceEpoch.toString();
-    
+
     setState(() {
       _messages.add(AgentChatMessage.assistant("", id: assistantMessageId));
     });
@@ -109,7 +110,8 @@ class _AgentChatViewState extends State<AgentChatView> {
             );
           });
         }
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     } finally {
       if (mounted) {
@@ -137,7 +139,8 @@ class _AgentChatViewState extends State<AgentChatView> {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Row(
-                  mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                  mainAxisAlignment:
+                      isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (!isUser) _buildAvatar(Icons.smart_toy_rounded, accent),
@@ -146,10 +149,15 @@ class _AgentChatViewState extends State<AgentChatView> {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: isUser ? accent : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                          color: isUser
+                              ? accent
+                              : theme.colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(16).copyWith(
-                            bottomRight: isUser ? const Radius.circular(0) : null,
-                            bottomLeft: !isUser ? const Radius.circular(0) : null,
+                            bottomRight:
+                                isUser ? const Radius.circular(0) : null,
+                            bottomLeft:
+                                !isUser ? const Radius.circular(0) : null,
                           ),
                         ),
                         child: MarkdownBody(
@@ -158,16 +166,20 @@ class _AgentChatViewState extends State<AgentChatView> {
                           builders: {
                             'code': CodeBlockBuilder(context),
                           },
-                          styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
+                          styleSheet:
+                              MarkdownStyleSheet.fromTheme(theme).copyWith(
                             p: theme.textTheme.bodyMedium?.copyWith(
-                              color: isUser ? Colors.white : theme.colorScheme.onSurfaceVariant,
+                              color: isUser
+                                  ? Colors.white
+                                  : theme.colorScheme.onSurfaceVariant,
                             ),
                             code: theme.textTheme.bodySmall?.copyWith(
                               backgroundColor: Colors.transparent,
                               fontFamily: 'monospace',
                             ),
                             codeblockDecoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
+                              color: theme.colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.8),
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
@@ -185,7 +197,9 @@ class _AgentChatViewState extends State<AgentChatView> {
         ValueListenableBuilder<bool>(
           valueListenable: _isProcessing,
           builder: (context, processing, _) {
-            if (processing && _messages.isNotEmpty && _messages.last.content.isEmpty) {
+            if (processing &&
+                _messages.isNotEmpty &&
+                _messages.last.content.isEmpty) {
               return const Padding(
                 padding: EdgeInsets.all(8.0),
                 child: LinearProgressIndicator(minHeight: 2),
@@ -194,9 +208,7 @@ class _AgentChatViewState extends State<AgentChatView> {
             return const SizedBox.shrink();
           },
         ),
-        if (widget.suggestions != null)
-          _buildSuggestions(theme, accent),
-
+        if (widget.suggestions != null) _buildSuggestions(theme, accent),
         _buildInputArea(theme, accent),
       ],
     );
@@ -220,8 +232,10 @@ class _AgentChatViewState extends State<AgentChatView> {
                 _controller.text = suggestion;
                 _sendMessage();
               },
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              backgroundColor: theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.5),
             ),
           );
         },
@@ -249,7 +263,8 @@ class _AgentChatViewState extends State<AgentChatView> {
                 controller: _controller,
                 decoration: InputDecoration(
                   hintText: 'Type a message...',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30)),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                 ),
                 onSubmitted: (value) => _sendMessage(),
@@ -279,7 +294,7 @@ class _AgentChatViewState extends State<AgentChatView> {
 class CodeBlockBuilder extends MarkdownElementBuilder {
   /// The [BuildContext] used for accessing themes and showing snackbars.
   final BuildContext context;
-  
+
   /// Creates a [CodeBlockBuilder].
   CodeBlockBuilder(this.context);
 
@@ -287,7 +302,8 @@ class CodeBlockBuilder extends MarkdownElementBuilder {
   @override
   Widget? visitElementAfter(md.Element element, TextStyle? preferredStyle) {
     final textContent = element.textContent;
-    final isCodeBlock = element.tag == 'pre' || (element.tag == 'code' && textContent.contains('\n'));
+    final isCodeBlock = element.tag == 'pre' ||
+        (element.tag == 'code' && textContent.contains('\n'));
 
     if (!isCodeBlock) return null;
 
@@ -303,8 +319,12 @@ class CodeBlockBuilder extends MarkdownElementBuilder {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.05),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(8)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -319,13 +339,17 @@ class CodeBlockBuilder extends MarkdownElementBuilder {
                   onTap: () {
                     Clipboard.setData(ClipboardData(text: textContent));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Copied to clipboard'), duration: Duration(seconds: 1)),
+                      const SnackBar(
+                          content: Text('Copied to clipboard'),
+                          duration: Duration(seconds: 1)),
                     );
                   },
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.copy_rounded, size: 14, color: Theme.of(context).colorScheme.primary),
+                      Icon(Icons.copy_rounded,
+                          size: 14,
+                          color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 4),
                       Text(
                         'Copy',

@@ -14,12 +14,13 @@ class RagService {
   }
 
   /// Retrieves relevant context for a query.
-  Future<List<String>> retrieveContext(String query, {int tokenBudget = 1000}) async {
+  Future<List<String>> retrieveContext(String query,
+      {int tokenBudget = 1000}) async {
     final searchResult = await rag.search(
       query,
       tokenBudget: tokenBudget,
     );
-    
+
     return [searchResult.context.text];
   }
 }

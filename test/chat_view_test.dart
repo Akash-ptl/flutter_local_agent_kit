@@ -4,7 +4,8 @@ import 'package:flutter_local_agent_kit/flutter_local_agent_kit.dart';
 
 void main() {
   group('AgentChatView', () {
-    testWidgets('replaces placeholder bubble with error message when stream fails', (
+    testWidgets(
+        'replaces placeholder bubble with error message when stream fails', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -26,7 +27,8 @@ void main() {
 
       expect(find.text('Hello'), findsOneWidget);
       expect(
-        find.textContaining('Sorry, something went wrong while generating a response.'),
+        find.textContaining(
+            'Sorry, something went wrong while generating a response.'),
         findsOneWidget,
       );
       expect(find.textContaining('Error: Exception: boom'), findsWidgets);

@@ -29,7 +29,8 @@ void main() {
       expect(kit.ragInitializationError, isNull);
     });
 
-    test('reinitialize disposes previous sessions before creating new ones', () async {
+    test('reinitialize disposes previous sessions before creating new ones',
+        () async {
       final runtime = _FakeKitRuntimeAdapter();
       final kit = FlutterLocalAgentKit(runtimeAdapter: runtime);
 
@@ -47,7 +48,9 @@ void main() {
       expect(runtime.ragDisposeCount, 1);
     });
 
-    test('RAG init failure preserves ready state but exposes degraded capability', () async {
+    test(
+        'RAG init failure preserves ready state but exposes degraded capability',
+        () async {
       final runtime = _FakeKitRuntimeAdapter(
         ragInitializationError: StateError('missing rag assets'),
       );

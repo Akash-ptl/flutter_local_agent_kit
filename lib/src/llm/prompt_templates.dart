@@ -1,13 +1,13 @@
 import 'package:flutter_local_agent_kit/src/core/models.dart';
 
 /// Abstract base class for all prompt templates.
-/// 
+///
 /// Templates responsible for formatting messages into a single prompt string
 /// that the specific LLM architecture expects.
 abstract class PromptTemplate {
   /// The sequence that signals the model to stop generating.
   String get stopSequence;
-  
+
   /// Formats a list of [messages] into a raw prompt string.
   String formatMessages(List<AgentChatMessage> messages);
 }
@@ -101,4 +101,3 @@ class ChatMlTemplate extends PromptTemplate {
     return buffer.toString();
   }
 }
-
