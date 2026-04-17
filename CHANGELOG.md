@@ -1,4 +1,15 @@
-# Changelog
+## [1.1.0] - 2026-04-17
+### Added
+- **Premium Branding**: New high-fidelity project logo and documentation architecture.
+- **RAG File Parsing**: Built-in support for `.pdf`, `.txt`, and `.json` document ingestion.
+- **Session Persistence**: Robust local storage for conversation history with auto-save support.
+- **Integrity Management**: SHA-256 checksum verification for model weights.
+- **Google-Tier Demo**: A completely overhauled example app with session management and premium UX.
+
+### Changed
+- Refactored `AgentChatView` for better integration with persistent sessions.
+- Enhanced `ModelManager` with local asset discovery and safe download protocols.
+- Standardized documentation across README, Contributing, and Issue templates.
 
 ## 1.0.2
 

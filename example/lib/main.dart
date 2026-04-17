@@ -1,25 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_agent_kit/flutter_local_agent_kit.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
 void main() {
-  runApp(const LocalAgentDemo());
+  runApp(const LocalAgentStudio());
 }
 
-/// A comprehensive demo app showcasing the full capabilities of the Local Agent Kit.
-class LocalAgentDemo extends StatelessWidget {
-  const LocalAgentDemo({super.key});
+/// A premium, production-grade demo app for Flutter Local Agent Kit.
+class LocalAgentStudio extends StatelessWidget {
+  const LocalAgentStudio({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Local Agent Studio',
-      theme: ThemeData(
+      themeMode: ThemeMode.dark,
+      darkTheme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6750A4),
-          brightness: Brightness.dark,
-        ),
+        brightness: Brightness.dark,
+        colorSchemeSeed: Colors.blueAccent,
+        fontFamily: 'Inter',
+        appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
       ),
       home: const AgentStudioPage(),
     );
@@ -35,202 +38,270 @@ class AgentStudioPage extends StatefulWidget {
 
 class _AgentStudioPageState extends State<AgentStudioPage> {
   final FlutterLocalAgentKit _kit = FlutterLocalAgentKit();
-
-  bool _isInit = false;
+  
+  bool _isInitializing = true;
+  String _loadingMessage = 'Starting Engines...';
   double _downloadProgress = 0.0;
-  String _statusMessage = 'System Idle';
-  String _activeModelName = 'Checking...';
-  int _ragDocCount = 0;
+  
+  List<AgentChatMessage> _currentHistory = [];
+  String _activeSessionId = 'default_session';
+  List<String> _allSessions = [];
 
   @override
   void initState() {
     super.initState();
-    _bootstrap();
+    _initializeKit();
   }
 
-  Future<void> _bootstrap() async {
-    setState(() => _statusMessage = 'Checking model weights...');
-
-    const modelId = 'llama-3.2-1b-instruct';
-    final recommended =
-        ModelManager.recommendedModels.firstWhere((m) => m.id == modelId);
-    setState(() => _activeModelName = recommended.name);
-
-    final isDownloaded = await _kit.models.isModelDownloaded(modelId);
-    final modelPath = await _kit.models.getLocalPath(modelId);
-
-    if (!isDownloaded) {
-      setState(
-          () => _statusMessage = 'Downloading ${recommended.name} (~700MB)...');
-      try {
-        await _kit.models.downloadModel(
-          recommended,
-          onProgress: (progress) =>
-              setState(() => _downloadProgress = progress),
-        );
-      } catch (e) {
-        setState(() => _statusMessage = 'Download Failed: $e');
-        return;
-      }
-    }
-
-    setState(() => _statusMessage = 'Booting Native Engines...');
+  Future<void> _initializeKit() async {
+    setState(() {
+      _isInitializing = true;
+      _loadingMessage = 'Locating Model Weights...';
+    });
 
     try {
+      final modelDef = ModelManager.recommendedModels.first;
+      final isDownloaded = await _kit.models.isModelDownloaded(modelDef.id);
+      final modelPath = await _kit.models.getLocalPath(modelDef.id);
+
+      if (!isDownloaded) {
+        setState(() => _loadingMessage = 'Downloading ${modelDef.name}...');
+        await _kit.models.downloadModel(
+          modelDef,
+          onProgress: (p) => setState(() => _downloadProgress = p),
+        );
+      }
+
+      setState(() => _loadingMessage = 'Initializing Neural Runtime...');
       await _kit.initialize(modelPath: modelPath);
+      
+      // Load sessions
+      final sessions = await _kit.persistence.listSessions();
+      final history = await _kit.loadSession(_activeSessionId);
+
       setState(() {
-        _isInit = true;
-        _statusMessage = 'AI Core Online';
+        _isInitializing = false;
+        _allSessions = sessions.isEmpty ? [_activeSessionId] : sessions;
+        _currentHistory = history;
       });
     } catch (e) {
-      setState(() => _statusMessage = 'Boot Error: $e');
+      setState(() => _loadingMessage = 'Initialization Error: $e');
     }
+  }
+
+  Future<void> _switchSession(String id) async {
+    final history = await _kit.loadSession(id);
+    setState(() {
+      _activeSessionId = id;
+      _currentHistory = history;
+    });
+    Navigator.pop(context); // Close drawer
+  }
+
+  Future<void> _createNewSession() async {
+    final id = 'session_${DateTime.now().millisecondsSinceEpoch}';
+    setState(() {
+      _activeSessionId = id;
+      _currentHistory = [];
+      _allSessions.insert(0, id);
+    });
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Local Agent Studio',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        actions: [_buildStatusChip()],
-      ),
-      body: _isInit
-          ? Column(
-              children: [
-                _buildControlPanel(),
-                const Divider(height: 1),
-                Expanded(
-                  child: AgentChatView(
-                    onMessage: (query) => _kit.runAgent(query),
-                    welcomeMessage:
-                        'I am your resident AI agent. Everything we discuss stays on this device.',
-                    suggestions: const [
-                      '🕵️ Who are you?',
-                      '📅 What is the time?',
-                      '🧮 Solve: (15 * 8) + 120',
-                      '📚 How does RAG work?',
-                      '🚀 Performance test',
-                    ],
-                  ),
-                ),
-              ],
-            )
-          : _buildLoadingState(),
-    );
-  }
+    if (_isInitializing) return _buildLoadingScreen();
 
-  Widget _buildControlPanel() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context)
-            .colorScheme
-            .surfaceContainerHighest
-            .withValues(alpha: 0.3),
+    return Scaffold(
+      drawer: _buildDrawer(),
+      appBar: AppBar(
+        title: Column(
+          children: [
+            const Text('Local Agent Studio', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(_activeSessionId, style: TextStyle(fontSize: 10, color: Colors.blueAccent.withOpacity(0.7))),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.auto_awesome_motion_rounded, size: 20),
+            onPressed: _showKnowledgeBaseInfo,
+            tooltip: 'Knowledge Base',
+          ),
+        ],
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Resident LLM: $_activeModelName',
-                    style: Theme.of(context).textTheme.labelLarge),
-                const SizedBox(height: 4),
-                Text('RAG Knowledge: $_ragDocCount documents',
-                    style: Theme.of(context).textTheme.bodySmall),
-              ],
-            ),
-          ),
-          ElevatedButton.icon(
-            onPressed: () {
-              // Simulated knowledge injection for demo
-              setState(() => _ragDocCount++);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('Document indexed into local vector base.')),
-              );
-            },
-            icon: const Icon(Icons.add_link),
-            label: const Text('Inject'),
-          ),
+      body: AgentChatView(
+        onMessage: (query) => _kit.runAgent(query),
+        initialHistory: _currentHistory,
+        onHistoryChanged: (history) {
+          _currentHistory = history;
+          _kit.saveSession(_activeSessionId, history);
+        },
+        suggestions: const [
+          '🕵️ Who are you?',
+          '📅 What is the current time?',
+          '🧮 Solve: (124 * 3) / 2',
+          '🔒 Is this conversation private?',
         ],
       ),
     );
   }
 
-  Widget _buildStatusChip() {
-    final isError =
-        _statusMessage.contains('Error') || _statusMessage.contains('Failed');
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: isError
-            ? Colors.red.withValues(alpha: 0.2)
-            : (_isInit
-                ? Colors.green.withValues(alpha: 0.2)
-                : Colors.orange.withValues(alpha: 0.2)),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color:
-              isError ? Colors.red : (_isInit ? Colors.green : Colors.orange),
-        ),
+  Widget _buildDrawer() {
+    return Drawer(
+      child: Column(
+        children: [
+          const DrawerHeader(
+            decoration: BoxDecoration(color: Colors.blueAccent),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.smart_toy_rounded, size: 48, color: Colors.white),
+                  SizedBox(height: 12),
+                  Text('Session Manager', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.add_comment_rounded, color: Colors.blueAccent),
+            title: const Text('New Chat', style: TextStyle(fontWeight: FontWeight.bold)),
+            onTap: _createNewSession,
+          ),
+          const Divider(),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _allSessions.length,
+              itemBuilder: (context, index) {
+                final id = _allSessions[index];
+                final isActive = id == _activeSessionId;
+                return ListTile(
+                  selected: isActive,
+                  leading: Icon(isActive ? Icons.chat_bubble_rounded : Icons.chat_bubble_outline_rounded),
+                  title: Text(id, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  onTap: () => _switchSession(id),
+                  trailing: id != 'default_session' ? IconButton(
+                    icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                    onPressed: () async {
+                      await _kit.persistence.deleteSession(id);
+                      final sessions = await _kit.persistence.listSessions();
+                      setState(() => _allSessions = sessions.isEmpty ? ['default_session'] : sessions);
+                    },
+                  ) : null,
+                );
+              },
+            ),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.settings_outlined),
+            title: const Text('Engine Settings'),
+            onTap: () {},
+          ),
+          const SizedBox(height: 16),
+        ],
       ),
-      child: Text(
-        isError ? 'ERROR' : (_isInit ? 'SECURE' : 'INITIALIZING'),
-        style: TextStyle(
-          color:
-              isError ? Colors.red : (_isInit ? Colors.green : Colors.orange),
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
+    );
+  }
+
+  Widget _buildLoadingScreen() {
+    final isError = _loadingMessage.contains('Error');
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (!isError) ...[
+                const CircularProgressIndicator(strokeWidth: 3),
+                const SizedBox(height: 40),
+              ] else ...[
+                const Icon(Icons.error_outline_rounded, color: Colors.red, size: 60),
+                const SizedBox(height: 20),
+              ],
+              Text(
+                _loadingMessage,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isError ? Colors.red : Colors.white70,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              if (!isError && _downloadProgress > 0) ...[
+                const SizedBox(height: 30),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: LinearProgressIndicator(
+                    value: _downloadProgress,
+                    minHeight: 6,
+                    backgroundColor: Colors.white10,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text('${(_downloadProgress * 100).toInt()}%', style: const TextStyle(fontSize: 12, color: Colors.blueAccent)),
+              ],
+              if (isError) ...[
+                const SizedBox(height: 30),
+                FilledButton.icon(
+                  onPressed: _initializeKit,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Try Again'),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildLoadingState() {
-    final isError =
-        _statusMessage.contains('Error') || _statusMessage.contains('Failed');
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
+  void _showKnowledgeBaseInfo() {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (!isError) const CircularProgressIndicator(),
-            if (isError)
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
-            const SizedBox(height: 24),
-            Text(
-              _statusMessage,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: isError ? Colors.red : null,
-                  ),
+            const Text('Local Knowledge Base', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            const Text(
+              'Your agent has access to a private vector store. You can ingest files like PDFs or JSONs to give the AI context about your private data.',
+              style: TextStyle(color: Colors.white70),
             ),
-            if (!isError && _downloadProgress > 0) ...[
-              const SizedBox(height: 16),
-              SizedBox(
-                width: 240,
-                child: LinearProgressIndicator(
-                    value: _downloadProgress,
-                    borderRadius: BorderRadius.circular(10)),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.file_upload_outlined),
+                    label: const Text('Ingest PDF'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.data_object_rounded),
+                    label: const Text('Ingest JSON'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.check_rounded),
+                label: const Text('Done'),
               ),
-              const SizedBox(height: 8),
-              Text('${(_downloadProgress * 100).toInt()}%',
-                  style: Theme.of(context).textTheme.labelSmall),
-            ],
-            if (isError) ...[
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: () => _bootstrap(),
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry Boot Sequence'),
-              ),
-            ],
+            ),
           ],
         ),
       ),
