@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:crypto/crypto.dart';
 
 /// Configuration for a downloadable LLM model.
 class ModelDefinition {
@@ -17,12 +18,16 @@ class ModelDefinition {
   /// Estimated size in bytes for progress calculations.
   final int estimatedSizeInBytes;
 
+  /// Expected SHA-256 checksum to verify file integrity.
+  final String? sha256;
+
   /// Creates a [ModelDefinition].
   ModelDefinition({
     required this.id,
     required this.url,
     required this.name,
     this.estimatedSizeInBytes = 0,
+    this.sha256,
   });
 }
 
@@ -75,7 +80,17 @@ class ModelManager {
         },
       );
 
-      return File(savePath);
+      final file = File(savePath);
+
+      if (model.sha256 != null) {
+        final isValid = await verifyIntegrity(model.id, model.sha256!);
+        if (!isValid) {
+          await file.delete();
+          throw Exception('Integrity check failed: SHA-256 mismatch.');
+        }
+      }
+
+      return file;
     } catch (e) {
       final partialFile = File(savePath);
       if (await partialFile.exists()) {
@@ -83,6 +98,28 @@ class ModelManager {
       }
       rethrow;
     }
+  }
+
+  /// Verifies the SHA-256 checksum of a local model.
+  Future<bool> verifyIntegrity(String modelId, String expectedSha256) async {
+    final path = await getLocalPath(modelId);
+    final file = File(path);
+    if (!await file.exists()) return false;
+
+    final bytes = await file.readAsBytes();
+    final digest = sha256.convert(bytes);
+    return digest.toString().toLowerCase() == expectedSha256.toLowerCase();
+  }
+
+  /// Lists all models currently stored in the local models directory.
+  Future<List<String>> listLocalModels() async {
+    final dir = await modelDir;
+    final List<FileSystemEntity> entities = await dir.list().toList();
+    return entities
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.gguf'))
+        .map((f) => p.basenameWithoutExtension(f.path))
+        .toList();
   }
 
   /// Permanently removes a model from the local device.

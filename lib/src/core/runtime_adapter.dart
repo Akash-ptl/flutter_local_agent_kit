@@ -98,14 +98,11 @@ class DefaultKitRuntimeAdapter implements KitRuntimeAdapter {
 
     final rag = MobileRag.instance;
 
+    final service = RagService(rag);
+
     return RagRuntimeSession(
-      service: RagService(rag),
-      ingestFile: (filePath) {
-        return rag.addDocumentFromFile(
-          filePath,
-          metadata: 'Source: Local File',
-        );
-      },
+      service: service,
+      ingestFile: (filePath) => service.addFile(filePath),
       dispose: MobileRag.dispose,
     );
   }

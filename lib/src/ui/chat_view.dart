@@ -22,6 +22,13 @@ class AgentChatView extends StatefulWidget {
   /// Primary color for user messages and UI elements.
   final Color? accentColor;
 
+  /// Optional initial history to display when the view loads.
+  final List<AgentChatMessage>? initialHistory;
+
+  /// Optional callback invoked whenever the message history changes.
+  /// Useful for auto-saving sessions.
+  final void Function(List<AgentChatMessage> history)? onHistoryChanged;
+
   /// Creates an [AgentChatView].
   ///
   /// The widget renders a simple chat transcript and streams assistant output
@@ -33,6 +40,8 @@ class AgentChatView extends StatefulWidget {
     this.suggestions,
     this.title = 'AI Assistant',
     this.accentColor,
+    this.initialHistory,
+    this.onHistoryChanged,
   });
 
   @override
@@ -50,7 +59,9 @@ class _AgentChatViewState extends State<AgentChatView> {
   @override
   void initState() {
     super.initState();
-    if (widget.welcomeMessage != null) {
+    if (widget.initialHistory != null) {
+      _messages.addAll(widget.initialHistory!);
+    } else if (widget.welcomeMessage != null) {
       _messages.add(AgentChatMessage.assistant(widget.welcomeMessage!));
     }
   }
@@ -99,6 +110,7 @@ class _AgentChatViewState extends State<AgentChatView> {
         }
         _scrollToBottom();
       }
+      widget.onHistoryChanged?.call(List.from(_messages));
     } catch (e) {
       if (mounted) {
         final index = _messages.indexWhere((m) => m.id == assistantMessageId);

@@ -1,3 +1,4 @@
+import 'package:flutter_local_agent_kit/src/utils/file_parser.dart';
 import 'package:mobile_rag_engine/mobile_rag_engine.dart';
 
 /// Internal service handling offline document ingestion and semantic search.
@@ -11,6 +12,14 @@ class RagService {
   /// Adds a document to the RAG database.
   Future<void> addDocument(String content) async {
     await rag.addDocument(content);
+  }
+
+  /// Parses a file and adds its content to the RAG database.
+  ///
+  /// Supports: .txt, .pdf, .json
+  Future<void> addFile(String filePath) async {
+    final content = await FileParser.parseFile(filePath);
+    await addDocument(content);
   }
 
   /// Retrieves relevant context for a query.

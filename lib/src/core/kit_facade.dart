@@ -5,6 +5,7 @@ import 'package:flutter_local_agent_kit/src/rag/rag_service.dart';
 import 'package:flutter_local_agent_kit/src/agent/agent_service.dart';
 import 'package:flutter_local_agent_kit/src/agent/tools.dart';
 import 'package:flutter_local_agent_kit/src/core/models.dart';
+import 'package:flutter_local_agent_kit/src/core/persistence.dart';
 import 'package:flutter_local_agent_kit/src/core/runtime_adapter.dart';
 import 'package:flutter_local_agent_kit/src/utils/model_manager.dart';
 
@@ -30,6 +31,7 @@ class FlutterLocalAgentKit {
   RagService? _ragService;
   AgentService? _agentService;
   final ModelManager _modelManager = ModelManager();
+  final PersistenceService _persistence = PersistenceService();
   Object? _ragInitializationError;
 
   final _statusController = StreamController<KitStatus>.broadcast();
@@ -49,6 +51,9 @@ class FlutterLocalAgentKit {
 
   /// The [ModelManager] responsible for background model downloads and integrity checks.
   ModelManager get models => _modelManager;
+
+  /// The [PersistenceService] responsible for saving and loading chat sessions.
+  PersistenceService get persistence => _persistence;
 
   /// Returns whether the optional RAG subsystem is available.
   bool get isRagReady => _ragService != null;
@@ -162,6 +167,17 @@ class FlutterLocalAgentKit {
   Future<void> ingestFile(String filePath) async {
     if (_ragSession == null) throw Exception('RAG engine not initialized');
     await _ragSession!.ingestFile(filePath);
+  }
+
+  /// Saves the current conversation history to local storage.
+  Future<void> saveSession(
+      String sessionId, List<AgentChatMessage> history) async {
+    await _persistence.saveSession(sessionId, history);
+  }
+
+  /// Loads a previous conversation history from local storage.
+  Future<List<AgentChatMessage>> loadSession(String sessionId) async {
+    return _persistence.loadSession(sessionId);
   }
 
   void _updateStatus(KitStatus newStatus) {

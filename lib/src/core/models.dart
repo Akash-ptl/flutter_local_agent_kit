@@ -57,6 +57,30 @@ class AgentChatMessage {
       timestamp: DateTime.now(),
     );
   }
+
+  /// Converts the message to a JSON-compatible map.
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'content': content,
+      'role': role.name,
+      'timestamp': timestamp.toIso8601String(),
+      if (metadata != null) 'metadata': metadata,
+    };
+  }
+
+  /// Creates a message from a JSON map.
+  factory AgentChatMessage.fromJson(Map<String, dynamic> json) {
+    return AgentChatMessage(
+      id: json['id'] as String,
+      content: json['content'] as String,
+      role: MessageRole.values.firstWhere((e) => e.name == json['role']),
+      timestamp: DateTime.parse(json['timestamp'] as String),
+      metadata: json['metadata'] != null
+          ? Map<String, dynamic>.from(json['metadata'] as Map)
+          : null,
+    );
+  }
 }
 
 /// Possible roles in a conversation.
@@ -71,7 +95,15 @@ enum MessageRole {
   assistant,
 
   /// Execution result from a tool.
-  tool,
+  tool;
+
+  /// Helper to convert string to role.
+  static MessageRole fromString(String role) {
+    return MessageRole.values.firstWhere(
+      (e) => e.name == role.toLowerCase(),
+      orElse: () => MessageRole.user,
+    );
+  }
 }
 
 /// Represents the lifecycle state of the Agent Kit.
