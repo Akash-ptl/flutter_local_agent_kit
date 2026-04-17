@@ -58,25 +58,6 @@ New to AI on mobile devices? Here is a quick cheat sheet to understand what this
 
 `flutter_local_agent_kit` acts as the grand orchestrator. You give it an LLM model, optional files for RAG, and define your tools. It automatically binds them together!
 
-```mermaid
-graph TD
-    UI[App UI / AgentChatView] -->|User Message| Kit[FlutterLocalAgentKit]
-    
-    subgraph Engine
-        Kit --> Agent[Agent Service]
-        Kit --> RAG[RAG Service]
-        Agent --> |Uses| LLM[LLM Engine]
-        Agent <--> |Calls Tools| Tools[BaseTools]
-        RAG --> |Context| Agent
-    end
-    
-    Tools -.-> |E.g. Math, DateTime, Custom| System(Device APIs)
-    LLM --> |Offline File| GGUF[(.gguf Model)]
-    RAG --> |Vector Search| VectorDB[(Local Db)]
-    
-    Agent --> |Streams Output| UI
-```
-
 1. **User asks a question** via the provided `AgentChatView`.
 2. **RAG Service** optionally scans the local database for relevant hidden context.
 3. **Agent Service** looks at the question, context, and available tools.

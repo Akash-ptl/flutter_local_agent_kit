@@ -33,4 +33,4 @@ What happened instead?
 
 ## Additional context
 
-Add logs, screenshots, stack traces, or sample code if helpful.
+Add logs, stack traces, or sample code if helpful.

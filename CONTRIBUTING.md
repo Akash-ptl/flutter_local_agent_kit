@@ -29,7 +29,7 @@ Please include:
 
 * a short summary of the change
 * why the change is needed
-* screenshots or terminal output when UI or tooling behavior changes
+* terminal output or logs when UI or tooling behavior changes
 * notes about compatibility risks, if any
 
 ## Code style

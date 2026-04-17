@@ -203,7 +203,6 @@ MIT
 - [ ] `dart format .`
 - [ ] Good `example/` app that actually works
 - [ ] `dart pub publish --dry-run` → passes
-- [ ] Add screenshots/GIFs to README later
 - [ ] Write basic tests
 - [ ] Push to GitHub (main branch)
 
