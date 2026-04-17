@@ -35,7 +35,6 @@ In the era of privacy-conscious software, the **Flutter Local Agent Kit** empowe
   - [Autonomous Agents](#autonomous-agents)
   - [Session Persistence](#session-persistence)
 - [Model Management](#-model-management)
-- [Performance Benchmarks](#-performance-benchmarks)
 - [Roadmap](#-roadmap)
 
 ---
@@ -148,17 +147,6 @@ await kit.models.downloadModel(
   onProgress: (p) => print('Download: ${p * 100}%'),
 );
 ```
-
----
-
-## ⚡ Performance Benchmarks
-*Tested on Apple A17 Pro / Snapdragon 8 Gen 3*
-
-| Model | Size | Throughput | RAM Usage |
-|-------|------|------------|-----------|
-| Llama 3.2 1B | 740MB | 48.2 tok/s | ~850MB |
-| Gemma 2B | 1.4GB | 22.5 tok/s | ~1.6GB |
-| Mistral 7B | 4.1GB | 8.4 tok/s | ~4.2GB |
 
 ---
 
