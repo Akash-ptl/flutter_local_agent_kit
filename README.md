@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="flutter_local_agent_kit_logo_1776404101953.png" width="200" alt="Flutter Local Agent Kit Logo">
+  <img src="logo.png" width="200" alt="Flutter Local Agent Kit Logo">
 </p>
 
 # Flutter Local Agent Kit
