@@ -81,6 +81,8 @@ class FlutterLocalAgentKit {
     List<BaseTool>? customTools,
     int contextSize = 4096,
     int gpuLayers = 32,
+    bool useCoreML = false,
+    bool useNnapi = false,
   }) async {
     if (_status == KitStatus.initializing) return;
 
@@ -98,6 +100,8 @@ class FlutterLocalAgentKit {
         template: template ?? Llama3Template(),
         contextSize: contextSize,
         gpuLayers: gpuLayers,
+        useCoreML: useCoreML,
+        useNnapi: useNnapi,
       );
 
       // 2. Attempt RAG Initialization (Optional Enhancement)
@@ -135,12 +139,16 @@ class FlutterLocalAgentKit {
     required PromptTemplate template,
     int contextSize = 4096,
     int gpuLayers = 32,
+    bool useCoreML = false,
+    bool useNnapi = false,
   }) async {
     _llmSession = await _runtimeAdapter.initializeLlm(
       modelPath: modelPath,
       template: template,
       contextSize: contextSize,
       gpuLayers: gpuLayers,
+      useCoreML: useCoreML,
+      useNnapi: useNnapi,
     );
     _llmService = _llmSession!.service;
   }

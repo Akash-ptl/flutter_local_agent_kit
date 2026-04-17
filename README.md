@@ -151,9 +151,11 @@ await kit.models.downloadModel(
 ---
 
 ## 🗺️ Roadmap
-- [ ] Multimodal support (Local Vision models)
-- [ ] Native CoreML / NNAPI inference delegates
-- [ ] Multi-agent orchestration (Agent-to-Agent communication)
+- [x] Native CoreML / NNAPI inference acceleration
+- [x] Multi-agent orchestration (AgentOrchestrator)
+- [x] Persistence & Session Management
+- [x] RAG File Parsing (.pdf, .json, .txt)
+- [/] Multimodal support (Foundations laid, UI started)
 - [ ] Native PDF rendering in ChatView
 
 ---

@@ -17,6 +17,9 @@ class AgentChatMessage {
   /// Optional structured data associated with the message.
   final Map<String, dynamic>? metadata;
 
+  /// Optional image data for multimodal queries.
+  final List<int>? imageBytes;
+
   /// Creates an [AgentChatMessage].
   AgentChatMessage({
     required this.id,
@@ -24,6 +27,7 @@ class AgentChatMessage {
     required this.role,
     required this.timestamp,
     this.metadata,
+    this.imageBytes,
   });
 
   /// Factory for creating a user message.
@@ -66,6 +70,7 @@ class AgentChatMessage {
       'role': role.name,
       'timestamp': timestamp.toIso8601String(),
       if (metadata != null) 'metadata': metadata,
+      if (imageBytes != null) 'imageBytes': imageBytes,
     };
   }
 
@@ -78,6 +83,9 @@ class AgentChatMessage {
       timestamp: DateTime.parse(json['timestamp'] as String),
       metadata: json['metadata'] != null
           ? Map<String, dynamic>.from(json['metadata'] as Map)
+          : null,
+      imageBytes: json['imageBytes'] != null
+          ? List<int>.from(json['imageBytes'] as List)
           : null,
     );
   }

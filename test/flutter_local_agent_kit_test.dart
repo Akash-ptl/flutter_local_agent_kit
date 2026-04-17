@@ -112,6 +112,8 @@ class _FakeKitRuntimeAdapter implements KitRuntimeAdapter {
     required PromptTemplate template,
     required int contextSize,
     required int gpuLayers,
+    bool useCoreML = false,
+    bool useNnapi = false,
   }) async {
     llmInitializeCount++;
 

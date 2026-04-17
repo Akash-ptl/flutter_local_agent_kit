@@ -12,6 +12,8 @@ abstract class KitRuntimeAdapter {
     required PromptTemplate template,
     required int contextSize,
     required int gpuLayers,
+    bool useCoreML = false,
+    bool useNnapi = false,
   });
 
   /// Creates an initialized RAG session.
@@ -59,13 +61,13 @@ class RagRuntimeSession {
 /// Default adapter backed by the production native engines.
 class DefaultKitRuntimeAdapter implements KitRuntimeAdapter {
   @override
-
-  /// Creates the production `llamadart` engine and wraps it in a disposable session.
   Future<LlmRuntimeSession> initializeLlm({
     required String modelPath,
     required PromptTemplate template,
     required int contextSize,
     required int gpuLayers,
+    bool useCoreML = false,
+    bool useNnapi = false,
   }) async {
     final engine = LlamaEngine(LlamaBackend());
     await engine.loadModel(
@@ -73,6 +75,9 @@ class DefaultKitRuntimeAdapter implements KitRuntimeAdapter {
       modelParams: ModelParams(
         contextSize: contextSize,
         gpuLayers: gpuLayers,
+        // TODO: Enable these when llamadart supports them directly
+        // useCoreML: useCoreML,
+        // useNnapi: useNnapi,
       ),
     );
 

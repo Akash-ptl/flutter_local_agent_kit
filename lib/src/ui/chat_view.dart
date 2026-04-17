@@ -270,6 +270,15 @@ class _AgentChatViewState extends State<AgentChatView> {
       child: SafeArea(
         child: Row(
           children: [
+            IconButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Multimodal Image Selection - Coming Soon')),
+                );
+              },
+              icon: const Icon(Icons.add_photo_alternate_outlined),
+            ),
+            const SizedBox(width: 4),
             Expanded(
               child: TextField(
                 controller: _controller,

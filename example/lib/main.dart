@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_agent_kit/flutter_local_agent_kit.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 
 void main() {
   runApp(const LocalAgentStudio());
@@ -95,7 +93,7 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
       _activeSessionId = id;
       _currentHistory = history;
     });
-    Navigator.pop(context); // Close drawer
+    if (mounted) Navigator.pop(context); // Close drawer
   }
 
   Future<void> _createNewSession() async {
@@ -105,7 +103,7 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
       _currentHistory = [];
       _allSessions.insert(0, id);
     });
-    Navigator.pop(context);
+    if (mounted) Navigator.pop(context);
   }
 
   @override
@@ -118,7 +116,7 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
         title: Column(
           children: [
             const Text('Local Agent Studio', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text(_activeSessionId, style: TextStyle(fontSize: 10, color: Colors.blueAccent.withOpacity(0.7))),
+            Text(_activeSessionId, style: TextStyle(fontSize: 10, color: Colors.blueAccent.withValues(alpha: 0.7))),
           ],
         ),
         actions: [
