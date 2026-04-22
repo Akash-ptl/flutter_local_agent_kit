@@ -121,6 +121,7 @@ class _FakeKitRuntimeAdapter implements KitRuntimeAdapter {
       service: LlmService(
         engine: _FakeLlamaEngine(),
         template: template,
+        contextSize: contextSize,
       ),
       dispose: () async {
         llmDisposeCount++;

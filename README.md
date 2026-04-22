@@ -7,7 +7,7 @@
 [![Pub.dev version](https://img.shields.io/pub/v/flutter_local_agent_kit.svg)](https://pub.dev/packages/flutter_local_agent_kit)
 [![Pub points](https://img.shields.io/badge/pub%20points-160%2F160-blue.svg)](https://pub.dev/packages/flutter_local_agent_kit/score)
 [![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](https://opensource.org/licenses/MIT)
-![Platforms](https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20Web-blueviolet)
+![Platforms](https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20macOS%20%7C%20Windows%20%7C%20Linux-blueviolet)
 
 **Flutter Local Agent Kit** is the professional-grade toolkit for building high-performance, completely offline AI agents in Flutter. Orchestrate Local LLMs, Private RAG (Retrieval-Augmented Generation), and autonomous tool-calling loops with zero cloud dependency and total user privacy.
 
@@ -35,6 +35,7 @@ In the era of privacy-conscious software, the **Flutter Local Agent Kit** empowe
   - [Autonomous Agents](#autonomous-agents)
   - [Session Persistence](#session-persistence)
 - [Model Management](#-model-management)
+- [Platform Support](#-platform-support)
 - [Roadmap](#-roadmap)
 
 ---
@@ -44,7 +45,7 @@ In the era of privacy-conscious software, the **Flutter Local Agent Kit** empowe
 ### 1. Add Dependency
 ```yaml
 dependencies:
-  flutter_local_agent_kit: ^1.0.2
+  flutter_local_agent_kit: ^1.1.0
 ```
 
 ### 2. Initialize the Engine
@@ -53,7 +54,7 @@ final kit = FlutterLocalAgentKit();
 
 await kit.initialize(
   modelPath: '/path/to/llama-3.2-1b.gguf',
-  template: Llama3Template(), // Supports Gemma, Mistral, ChatML
+  template: Llama3Template(), // Or GemmaTemplate(), MistralTemplate(), etc.
 );
 ```
 
@@ -84,7 +85,10 @@ The kit implements the **Reason + Act** (ReAct) paradigm. When an agent receives
 ### Basic Inference
 For simple request-response chat without autonomous agents:
 ```dart
-kit.askStream("Hello, who are you?").listen((token) {
+kit.askStream(
+  "Hello, who are you?", 
+  maxTokens: 500, // Optional limit
+).listen((token) {
   print(token);
 });
 ```
@@ -114,7 +118,11 @@ class GpsTool extends BaseTool {
   }
 }
 
-kit.runAgent("Where am I right now?", customTools: [GpsTool()]);
+kit.runAgent(
+  "Where am I right now?", 
+  customTools: [GpsTool()],
+  maxTokens: 1024,
+);
 ```
 
 ### Session Persistence
@@ -147,6 +155,18 @@ await kit.models.downloadModel(
   onProgress: (p) => print('Download: ${p * 100}%'),
 );
 ```
+
+## 📱 Platform Support
+
+| Feature | Android | iOS | macOS | Windows | Linux |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| LLM Inference | ✅ | ✅ | ✅ | ✅ | ✅ |
+| RAG Retrieval | ✅ | ✅ | 🚧 | 🚧 | 🚧 |
+| Autonomous Agents | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Material 3 UI | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+> [!NOTE]
+> RAG support for Desktop platforms is currently in development and will be released in an upcoming patch.
 
 ---
 

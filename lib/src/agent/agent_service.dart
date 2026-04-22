@@ -55,7 +55,7 @@ Begin!""";
   }
 
   /// Runs the agentic loop for a given query.
-  Stream<String> run(String query) async* {
+  Stream<String> run(String query, {int? maxTokens}) async* {
     List<AgentChatMessage> conversation = [
       AgentChatMessage.system(_buildSystemPrompt()),
       AgentChatMessage.user(query),
@@ -65,7 +65,7 @@ Begin!""";
       final prompt = llm.format(conversation);
 
       String fullResponse = "";
-      await for (final token in llm.generateStream(prompt)) {
+      await for (final token in llm.generateStream(prompt, maxTokens: maxTokens)) {
         fullResponse += token;
       }
 

@@ -273,7 +273,9 @@ class _AgentChatViewState extends State<AgentChatView> {
             IconButton(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Multimodal Image Selection - Coming Soon')),
+                  const SnackBar(
+                      content:
+                          Text('Multimodal Image Selection - Coming Soon')),
                 );
               },
               icon: const Icon(Icons.add_photo_alternate_outlined),

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_local_agent_kit/src/core/models.dart';
+
 void main() {
   late Directory tempDir;
 
@@ -17,11 +18,11 @@ void main() {
   test('AgentChatMessage JSON serialization', () {
     final message = AgentChatMessage.user('Hello world', id: '123');
     final json = message.toJson();
-    
+
     expect(json['id'], '123');
     expect(json['content'], 'Hello world');
     expect(json['role'], 'user');
-    
+
     final decoded = AgentChatMessage.fromJson(json);
     expect(decoded.id, message.id);
     expect(decoded.content, message.content);

@@ -36,11 +36,11 @@ class AgentStudioPage extends StatefulWidget {
 
 class _AgentStudioPageState extends State<AgentStudioPage> {
   final FlutterLocalAgentKit _kit = FlutterLocalAgentKit();
-  
+
   bool _isInitializing = true;
   String _loadingMessage = 'Starting Engines...';
   double _downloadProgress = 0.0;
-  
+
   List<AgentChatMessage> _currentHistory = [];
   String _activeSessionId = 'default_session';
   List<String> _allSessions = [];
@@ -72,7 +72,7 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
 
       setState(() => _loadingMessage = 'Initializing Neural Runtime...');
       await _kit.initialize(modelPath: modelPath);
-      
+
       // Load sessions
       final sessions = await _kit.persistence.listSessions();
       final history = await _kit.loadSession(_activeSessionId);
@@ -115,8 +115,12 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
       appBar: AppBar(
         title: Column(
           children: [
-            const Text('Local Agent Studio', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text(_activeSessionId, style: TextStyle(fontSize: 10, color: Colors.blueAccent.withValues(alpha: 0.7))),
+            const Text('Local Agent Studio',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(_activeSessionId,
+                style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.blueAccent.withValues(alpha: 0.7))),
           ],
         ),
         actions: [
@@ -156,14 +160,20 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
                 children: [
                   Icon(Icons.smart_toy_rounded, size: 48, color: Colors.white),
                   SizedBox(height: 12),
-                  Text('Session Manager', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text('Session Manager',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.add_comment_rounded, color: Colors.blueAccent),
-            title: const Text('New Chat', style: TextStyle(fontWeight: FontWeight.bold)),
+            leading:
+                const Icon(Icons.add_comment_rounded, color: Colors.blueAccent),
+            title: const Text('New Chat',
+                style: TextStyle(fontWeight: FontWeight.bold)),
             onTap: _createNewSession,
           ),
           const Divider(),
@@ -175,17 +185,25 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
                 final isActive = id == _activeSessionId;
                 return ListTile(
                   selected: isActive,
-                  leading: Icon(isActive ? Icons.chat_bubble_rounded : Icons.chat_bubble_outline_rounded),
+                  leading: Icon(isActive
+                      ? Icons.chat_bubble_rounded
+                      : Icons.chat_bubble_outline_rounded),
                   title: Text(id, maxLines: 1, overflow: TextOverflow.ellipsis),
                   onTap: () => _switchSession(id),
-                  trailing: id != 'default_session' ? IconButton(
-                    icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                    onPressed: () async {
-                      await _kit.persistence.deleteSession(id);
-                      final sessions = await _kit.persistence.listSessions();
-                      setState(() => _allSessions = sessions.isEmpty ? ['default_session'] : sessions);
-                    },
-                  ) : null,
+                  trailing: id != 'default_session'
+                      ? IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded,
+                              size: 18),
+                          onPressed: () async {
+                            await _kit.persistence.deleteSession(id);
+                            final sessions =
+                                await _kit.persistence.listSessions();
+                            setState(() => _allSessions = sessions.isEmpty
+                                ? ['default_session']
+                                : sessions);
+                          },
+                        )
+                      : null,
                 );
               },
             ),
@@ -215,7 +233,8 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
                 const CircularProgressIndicator(strokeWidth: 3),
                 const SizedBox(height: 40),
               ] else ...[
-                const Icon(Icons.error_outline_rounded, color: Colors.red, size: 60),
+                const Icon(Icons.error_outline_rounded,
+                    color: Colors.red, size: 60),
                 const SizedBox(height: 20),
               ],
               Text(
@@ -238,7 +257,9 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text('${(_downloadProgress * 100).toInt()}%', style: const TextStyle(fontSize: 12, color: Colors.blueAccent)),
+                Text('${(_downloadProgress * 100).toInt()}%',
+                    style: const TextStyle(
+                        fontSize: 12, color: Colors.blueAccent)),
               ],
               if (isError) ...[
                 const SizedBox(height: 30),
@@ -265,7 +286,8 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Local Knowledge Base', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text('Local Knowledge Base',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             const Text(
               'Your agent has access to a private vector store. You can ingest files like PDFs or JSONs to give the AI context about your private data.',

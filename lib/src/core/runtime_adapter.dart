@@ -82,7 +82,11 @@ class DefaultKitRuntimeAdapter implements KitRuntimeAdapter {
     );
 
     return LlmRuntimeSession(
-      service: LlmService(engine: engine, template: template),
+      service: LlmService(
+        engine: engine,
+        template: template,
+        contextSize: contextSize,
+      ),
       dispose: engine.dispose,
     );
   }

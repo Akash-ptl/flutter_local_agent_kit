@@ -11,23 +11,27 @@ class LlmService {
   /// The template used for formatting prompts.
   final PromptTemplate template;
 
+  /// The context size (maximum memory window) of the loaded model.
+  final int contextSize;
+
   /// Creates an [LlmService].
   LlmService({
     required this.engine,
     required this.template,
+    required this.contextSize,
   });
 
   /// Generates a streaming response for the given prompt.
   Stream<String> generateStream(
     String prompt, {
     double temperature = 0.7,
-    int maxTokens = 1024,
+    int? maxTokens,
   }) {
     return engine.generate(
       prompt,
       params: GenerationParams(
         temp: temperature,
-        maxTokens: maxTokens,
+        maxTokens: maxTokens ?? 1024,
         stopSequences: [template.stopSequence],
       ),
     );

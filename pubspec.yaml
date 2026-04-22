@@ -1,9 +1,9 @@
 name: flutter_local_agent_kit
 description: Offline-first AI framework for Flutter. Resident LLM inference, local RAG, and autonomous agents with a Material 3 Chat UI.
-version: 1.0.2
-homepage: https://github.com/akashptl/flutter_local_agent_kit
-repository: https://github.com/akashptl/flutter_local_agent_kit
-issue_tracker: https://github.com/akashptl/flutter_local_agent_kit/issues
+version: 1.1.0
+homepage: https://github.com/Akash-ptl/flutter_local_agent_kit
+repository: https://github.com/Akash-ptl/flutter_local_agent_kit
+issue_tracker: https://github.com/Akash-ptl/flutter_local_agent_kit/issues
 
 
 environment:

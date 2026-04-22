@@ -61,6 +61,9 @@ class FlutterLocalAgentKit {
   /// The most recent RAG initialization error, if startup fell back to LLM-only mode.
   Object? get ragInitializationError => _ragInitializationError;
 
+  /// The total context window (max tokens) currently available to the LLM.
+  int get contextSize => _llmService?.contextSize ?? 0;
+
   /// Boots all AI services (LLM and RAG) in a single call.
   ///
   /// [modelPath] is the absolute path to the GGUF model file.
@@ -208,7 +211,8 @@ class FlutterLocalAgentKit {
   /// Executes an autonomous reasoning loop.
   ///
   /// [systemPrompt] allows overriding the default agent instructions.
-  Stream<String> runAgent(String query, {String? systemPrompt}) {
+  /// [maxTokens] limits the length of each generation turn.
+  Stream<String> runAgent(String query, {String? systemPrompt, int? maxTokens}) {
     if (!isReady) throw Exception('Kit is not ready');
 
     // Create a temporary service instance if a custom prompt is provided
@@ -217,14 +221,15 @@ class FlutterLocalAgentKit {
             customInstructions: systemPrompt)
         : _agentService!;
 
-    return service.run(query);
+    return service.run(query, maxTokens: maxTokens);
   }
 
   /// Performs a high-speed RAG-augmented query against the local knowledge base.
   ///
   /// Pass prior conversation [history] to preserve context across turns.
+  /// [maxTokens] limits the response length.
   Stream<String> askStream(String query,
-      {List<AgentChatMessage> history = const []}) async* {
+      {List<AgentChatMessage> history = const [], int? maxTokens}) async* {
     if (!isReady) throw Exception('Kit is not ready');
 
     // Attempt to retrieve context only if RAG is available.
@@ -238,7 +243,8 @@ class FlutterLocalAgentKit {
       ...history,
       AgentChatMessage.user(query),
     ];
-    yield* _llmService!.generateStream(_llmService!.format(messages));
+    yield* _llmService!.generateStream(_llmService!.format(messages),
+        maxTokens: maxTokens);
   }
 
   /// Closes all native engines and releases all held RAM.
