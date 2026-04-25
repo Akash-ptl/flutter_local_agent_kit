@@ -169,7 +169,6 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
 
     if (confirmed == true) {
       if (!mounted) return;
-      final messenger = ScaffoldMessenger.of(context);
       try {
         final transport = mcp.StreamableHttpClientTransport(Uri.parse(controller.text));
         await _kit.useMcpServer(transport);

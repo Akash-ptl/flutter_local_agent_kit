@@ -118,9 +118,11 @@ class _AgentChatViewState extends State<AgentChatView> {
         },
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Voice Error: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Voice Error: $e')),
+        );
+      }
     }
   }
 
@@ -196,8 +198,10 @@ class _AgentChatViewState extends State<AgentChatView> {
             );
           });
         }
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+        if (mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('Error: $e')));
+        }
       }
     } finally {
       if (mounted) {

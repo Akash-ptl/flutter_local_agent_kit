@@ -3,7 +3,7 @@
 /// This library provides a high-level API to build production-grade AI
 /// applications that run entirely on-device. It integrates multimodal LLMs,
 /// vector-based RAG, and the Model Context Protocol (MCP).
-library flutter_local_agent_kit;
+library;
 
 export 'package:flutter_local_agent_kit/src/core/kit_facade.dart';
 export 'package:flutter_local_agent_kit/src/core/models.dart';

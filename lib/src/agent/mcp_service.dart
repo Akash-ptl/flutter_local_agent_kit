@@ -8,7 +8,7 @@ class McpService {
   /// Connects to a new MCP server using the provided [transport].
   Future<McpClient> connect(Transport transport) async {
     final client = McpClient(
-      Implementation(name: 'flutter-local-agent-kit', version: '1.1.1'),
+      const Implementation(name: 'flutter-local-agent-kit', version: '1.1.1'),
     );
     await client.connect(transport);
     _clients.add(client);
@@ -40,9 +40,13 @@ class McpService {
 
 /// A [BaseTool] implementation that wraps a remote MCP tool.
 class McpTool extends BaseTool {
+  /// The client used to communicate with the MCP server.
   final McpClient client;
+
+  /// The definition of the tool provided by the MCP server.
   final Tool definition;
 
+  /// Creates an [McpTool] from an MCP client and tool definition.
   McpTool(this.client, this.definition)
       : super(
           name: definition.name,

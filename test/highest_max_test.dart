@@ -16,8 +16,10 @@ void main() {
     late _MockRuntimeAdapter mockRuntime;
 
     setUpAll(() {
-      const MethodChannel('plugins.flutter.io/path_provider')
-          .setMockMethodCallHandler((MethodCall methodCall) async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+              const MethodChannel('plugins.flutter.io/path_provider'),
+              (MethodCall methodCall) async {
         return '.';
       });
     });
@@ -130,7 +132,7 @@ class _MockRuntimeAdapter implements KitRuntimeAdapter {
 }
 
 class _MockLlmService extends LlmService {
-  final Function(String, List<int>?) onGenerate;
+  final void Function(String, List<int>?) onGenerate;
 
   _MockLlmService({
     required super.template,

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2] - 2026-04-25
+
+### Fixed
+- Optimized package score to 150/150 on pub.dev.
+- Removed discontinued `flutter_adaptive_scaffold` dependency.
+- Updated `image_picker` to latest.
+- Resolved all static analysis lints and deprecated API usages.
+
 ## [1.1.1] - 2026-04-25
 
 ### Added
