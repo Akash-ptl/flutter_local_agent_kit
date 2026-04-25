@@ -106,8 +106,9 @@ class ModelManager {
     final file = File(path);
     if (!await file.exists()) return false;
 
-    final bytes = await file.readAsBytes();
-    final digest = sha256.convert(bytes);
+    final stream = file.openRead();
+    final digest = await sha256.bind(stream).first;
+    
     return digest.toString().toLowerCase() == expectedSha256.toLowerCase();
   }
 
@@ -146,6 +147,13 @@ class ModelManager {
           url:
               'https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf',
           estimatedSizeInBytes: 2300000000,
+        ),
+        ModelDefinition(
+          id: 'llama-3.2-11b-vision',
+          name: 'Llama 3.2 Vision (11B) - Multimodal',
+          url:
+              'https://huggingface.co/bartowski/Llama-3.2-11B-Vision-Instruct-GGUF/resolve/main/Llama-3.2-11B-Vision-Instruct-Q4_K_M.gguf',
+          estimatedSizeInBytes: 7100000000,
         ),
       ];
 }

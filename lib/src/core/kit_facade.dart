@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:uuid/uuid.dart';
 import 'package:flutter_local_agent_kit/src/llm/llm_service.dart';
 import 'package:flutter_local_agent_kit/src/llm/prompt_templates.dart';
 import 'package:flutter_local_agent_kit/src/rag/rag_service.dart';
@@ -8,12 +9,27 @@ import 'package:flutter_local_agent_kit/src/core/models.dart';
 import 'package:flutter_local_agent_kit/src/core/persistence.dart';
 import 'package:flutter_local_agent_kit/src/core/runtime_adapter.dart';
 import 'package:flutter_local_agent_kit/src/utils/model_manager.dart';
+import 'package:flutter_local_agent_kit/src/agent/mcp_service.dart';
+import 'package:mcp_dart/mcp_dart.dart' show Transport;
 
-/// {@template flutter_local_agent_kit}
+/// Status of the [FlutterLocalAgentKit] as it initializes and operates.
+enum KitStatus {
+  /// Kit is created but no models are loaded.
+  uninitialized,
+
+  /// Currently loading models and initializing native engines.
+  initializing,
+
+  /// Models are loaded and services are ready to process queries.
+  ready,
+
+  /// An error occurred during initialization.
+  error,
+}
+
 /// The Flutter Local Agent Kit is the central entry point for on-device AI.
 ///
 /// It orchestrates LLM inference, RAG knowledge retrieval, and autonomous agents.
-/// {@endtemplate}
 class FlutterLocalAgentKit {
   /// Creates the main entry point for local model inference, tools, and RAG.
   ///
@@ -32,6 +48,7 @@ class FlutterLocalAgentKit {
   AgentService? _agentService;
   final ModelManager _modelManager = ModelManager();
   final PersistenceService _persistence = PersistenceService();
+  final McpService _mcpService = McpService();
   Object? _ragInitializationError;
 
   final _statusController = StreamController<KitStatus>.broadcast();
@@ -84,8 +101,7 @@ class FlutterLocalAgentKit {
     List<BaseTool>? customTools,
     int contextSize = 4096,
     int gpuLayers = 32,
-    bool useCoreML = false,
-    bool useNnapi = false,
+    String? projectorPath,
   }) async {
     if (_status == KitStatus.initializing) return;
 
@@ -103,8 +119,7 @@ class FlutterLocalAgentKit {
         template: template ?? Llama3Template(),
         contextSize: contextSize,
         gpuLayers: gpuLayers,
-        useCoreML: useCoreML,
-        useNnapi: useNnapi,
+        projectorPath: projectorPath,
       );
 
       // 2. Attempt RAG Initialization (Optional Enhancement)
@@ -142,16 +157,14 @@ class FlutterLocalAgentKit {
     required PromptTemplate template,
     int contextSize = 4096,
     int gpuLayers = 32,
-    bool useCoreML = false,
-    bool useNnapi = false,
+    String? projectorPath,
   }) async {
     _llmSession = await _runtimeAdapter.initializeLlm(
       modelPath: modelPath,
       template: template,
       contextSize: contextSize,
       gpuLayers: gpuLayers,
-      useCoreML: useCoreML,
-      useNnapi: useNnapi,
+      multimodalProjectorPath: projectorPath,
     );
     _llmService = _llmSession!.service;
   }
@@ -180,6 +193,22 @@ class FlutterLocalAgentKit {
     await _ragSession!.ingestFile(filePath);
   }
 
+  /// Connects to a remote MCP server to expand the agent's tool capabilities.
+  ///
+  /// This automatically discovers tools on the server and injects them into
+  /// the active [AgentService].
+  Future<void> useMcpServer(Transport transport) async {
+    await _mcpService.connect(transport);
+    if (_agentService != null) {
+      final mcpTools = await _mcpService.getTools();
+      // Update agent with combined toolset
+      _agentService = AgentService(
+        _llmService!,
+        [..._agentService!.tools, ...mcpTools],
+      );
+    }
+  }
+
   /// Saves the current conversation history to local storage.
   Future<void> saveSession(
       String sessionId, List<AgentChatMessage> history) async {
@@ -199,6 +228,7 @@ class FlutterLocalAgentKit {
   Future<void> _disposeResources() async {
     await _llmSession?.dispose();
     await _ragSession?.dispose();
+    await _mcpService.dispose();
     _llmSession = null;
     _ragSession = null;
     _llmService = null;
@@ -227,24 +257,44 @@ class FlutterLocalAgentKit {
   /// Performs a high-speed RAG-augmented query against the local knowledge base.
   ///
   /// Pass prior conversation [history] to preserve context across turns.
+  /// [imageBytes] allows providing an image for multimodal analysis.
+  /// [onCitations] is called when RAG results are retrieved, before streaming starts.
   /// [maxTokens] limits the response length.
-  Stream<String> askStream(String query,
-      {List<AgentChatMessage> history = const [], int? maxTokens}) async* {
+  Stream<String> askStream(
+    String query, {
+    List<AgentChatMessage> history = const [],
+    List<int>? imageBytes,
+    void Function(List<RetrievalResult> citations)? onCitations,
+    int? maxTokens,
+  }) async* {
     if (!isReady) throw Exception('Kit is not ready');
 
-    // Attempt to retrieve context only if RAG is available.
-    final context = _ragService != null
-        ? await _ragService!.retrieveContext(query)
-        : <String>[];
+    // Retrieve structured results
+    final results = _ragService != null
+        ? await _ragService!.retrieve(query)
+        : <RetrievalResult>[];
+
+    // Inform caller about retrieved citations
+    if (onCitations != null && results.isNotEmpty) {
+      onCitations(results);
+    }
+
+    final context = results.map((r) => r.content).toList();
 
     final messages = [
       if (context.isNotEmpty)
         AgentChatMessage.system('Context:\n${context.join('\n')}'),
       ...history,
-      AgentChatMessage.user(query),
+      AgentChatMessage(
+        id: const Uuid().v4(),
+        content: query,
+        role: MessageRole.user,
+        timestamp: DateTime.now(),
+        imageBytes: imageBytes,
+      ),
     ];
-    yield* _llmService!.generateStream(_llmService!.format(messages),
-        maxTokens: maxTokens);
+
+    yield* _llmService!.generateChatStream(messages, maxTokens: maxTokens);
   }
 
   /// Closes all native engines and releases all held RAM.

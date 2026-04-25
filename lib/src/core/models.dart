@@ -20,6 +20,9 @@ class AgentChatMessage {
   /// Optional image data for multimodal queries.
   final List<int>? imageBytes;
 
+  /// Returns true if the message contains an image.
+  bool get hasImage => imageBytes != null;
+
   /// Creates an [AgentChatMessage].
   AgentChatMessage({
     required this.id,
@@ -31,12 +34,14 @@ class AgentChatMessage {
   });
 
   /// Factory for creating a user message.
-  factory AgentChatMessage.user(String content, {String? id}) {
+  factory AgentChatMessage.user(String content,
+      {String? id, List<int>? imageBytes}) {
     return AgentChatMessage(
       id: id ?? const Uuid().v4(),
       content: content,
       role: MessageRole.user,
       timestamp: DateTime.now(),
+      imageBytes: imageBytes,
     );
   }
 
@@ -114,20 +119,71 @@ enum MessageRole {
   }
 }
 
-/// Represents the lifecycle state of the Agent Kit.
-enum KitStatus {
-  /// Not yet initialized.
-  uninitialized,
 
-  /// Currently booting native engines.
-  initializing,
 
-  /// All engines ready for inference.
-  ready,
+/// A chunk of retrieved context with source metadata.
+class RetrievalResult {
+  /// The text content of the chunk.
+  final String content;
 
-  /// Currently processing a query.
-  processing,
+  /// Metadata about the source document.
+  final SourceMetadata source;
 
-  /// Initialization failed.
-  error,
+  /// Similarity score (0.0 to 1.0).
+  final double score;
+
+  /// Creates a [RetrievalResult].
+  RetrievalResult({
+    required this.content,
+    required this.source,
+    required this.score,
+  });
+
+  /// Converts to JSON.
+  Map<String, dynamic> toJson() => {
+        'content': content,
+        'source': source.toJson(),
+        'score': score,
+      };
+
+  /// Creates from JSON.
+  factory RetrievalResult.fromJson(Map<String, dynamic> json) =>
+      RetrievalResult(
+        content: json['content'] as String,
+        source: SourceMetadata.fromJson(json['source'] as Map<String, dynamic>),
+        score: (json['score'] as num).toDouble(),
+      );
+}
+
+/// Metadata about a source document used in RAG.
+class SourceMetadata {
+  /// Name or title of the document.
+  final String title;
+
+  /// Path or URL to the original file.
+  final String? filePath;
+
+  /// Page number if applicable.
+  final int? pageNumber;
+
+  /// Creates [SourceMetadata].
+  SourceMetadata({
+    required this.title,
+    this.filePath,
+    this.pageNumber,
+  });
+
+  /// Converts to JSON.
+  Map<String, dynamic> toJson() => {
+        'title': title,
+        'filePath': filePath,
+        'pageNumber': pageNumber,
+      };
+
+  /// Creates from JSON.
+  factory SourceMetadata.fromJson(Map<String, dynamic> json) => SourceMetadata(
+        title: json['title'] as String,
+        filePath: json['filePath'] as String?,
+        pageNumber: json['pageNumber'] as int?,
+      );
 }

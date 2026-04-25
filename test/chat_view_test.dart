@@ -12,7 +12,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: AgentChatView(
-              onMessage: (_) async* {
+              onMessage: (_, {imageBytes, onCitations}) async* {
                 throw Exception('boom');
               },
             ),
@@ -25,13 +25,14 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.text('Hello'), findsOneWidget);
+      expect(find.textContaining('Hello', findRichText: true), findsOneWidget);
       expect(
         find.textContaining(
-            'Sorry, something went wrong while generating a response.'),
+            'Sorry, something went wrong while generating a response.',
+            findRichText: true),
         findsOneWidget,
       );
-      expect(find.textContaining('Error: Exception: boom'), findsWidgets);
+      expect(find.textContaining('Error: Exception: boom', findRichText: true), findsWidgets);
       expect(find.byType(LinearProgressIndicator), findsNothing);
     });
   });

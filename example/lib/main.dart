@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_agent_kit/flutter_local_agent_kit.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:mcp_dart/mcp_dart.dart' as mcp;
 
 void main() {
   runApp(const LocalAgentStudio());
@@ -71,7 +73,10 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
       }
 
       setState(() => _loadingMessage = 'Initializing Neural Runtime...');
-      await _kit.initialize(modelPath: modelPath);
+      await _kit.initialize(
+        modelPath: modelPath,
+        gpuLayers: 32, // Max efficiency offloading
+      );
 
       // Load sessions
       final sessions = await _kit.persistence.listSessions();
@@ -93,7 +98,7 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
       _activeSessionId = id;
       _currentHistory = history;
     });
-    if (mounted) Navigator.pop(context); // Close drawer
+    if (mounted) Navigator.pop(context);
   }
 
   Future<void> _createNewSession() async {
@@ -106,6 +111,83 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
     if (mounted) Navigator.pop(context);
   }
 
+  Future<void> _handleRealIngestion() async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'json', 'txt'],
+    );
+
+    if (result != null && result.files.single.path != null) {
+      if (!mounted) return;
+      final path = result.files.single.path!;
+      Navigator.pop(context);
+      
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.showSnackBar(
+        SnackBar(content: Text('Ingesting ${result.files.single.name}...')),
+      );
+
+      try {
+        await _kit.ingestFile(path);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Knowledge Base Updated Successfully.'),
+              backgroundColor: Colors.green.shade800,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Ingestion Failed: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _connectMcp() async {
+    final controller = TextEditingController(text: 'http://localhost:3001/sse');
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Connect to MCP Server'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Server SSE URL',
+            hintText: 'http://localhost:3001/sse',
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Connect')),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      try {
+        final transport = mcp.StreamableHttpClientTransport(Uri.parse(controller.text));
+        await _kit.useMcpServer(transport);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Connected to MCP Server. Tools synchronized.')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('MCP Connection Error: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isInitializing) return _buildLoadingScreen();
@@ -113,17 +195,20 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
     return Scaffold(
       drawer: _buildDrawer(),
       appBar: AppBar(
-        title: Column(
+        title: const Column(
           children: [
-            const Text('Local Agent Studio',
+            Text('Local Agent Studio',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text(_activeSessionId,
-                style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.blueAccent.withValues(alpha: 0.7))),
+            Text('Premium AI Experience',
+                style: TextStyle(fontSize: 10, color: Colors.blueAccent)),
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.lan_outlined),
+            onPressed: _connectMcp,
+            tooltip: 'Connect MCP Server',
+          ),
           IconButton(
             icon: const Icon(Icons.auto_awesome_motion_rounded, size: 20),
             onPressed: _showKnowledgeBaseInfo,
@@ -132,7 +217,13 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
         ],
       ),
       body: AgentChatView(
-        onMessage: (query) => _kit.runAgent(query),
+        title: 'Neural Assistant',
+        onMessage: (query, {imageBytes, onCitations}) => _kit.askStream(
+          query,
+          history: _currentHistory,
+          imageBytes: imageBytes,
+          onCitations: onCitations,
+        ),
         initialHistory: _currentHistory,
         onHistoryChanged: (history) {
           _currentHistory = history;
@@ -140,9 +231,9 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
         },
         suggestions: const [
           '🕵️ Who are you?',
-          '📅 What is the current time?',
-          '🧮 Solve: (124 * 3) / 2',
-          '🔒 Is this conversation private?',
+          '🖼️ Analyze this image',
+          '📚 Check my Knowledge Base',
+          '🛠️ List available tools',
         ],
       ),
     );
@@ -160,7 +251,7 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
                 children: [
                   Icon(Icons.smart_toy_rounded, size: 48, color: Colors.white),
                   SizedBox(height: 12),
-                  Text('Session Manager',
+                  Text('Local Agent Studio',
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -170,10 +261,8 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
             ),
           ),
           ListTile(
-            leading:
-                const Icon(Icons.add_comment_rounded, color: Colors.blueAccent),
-            title: const Text('New Chat',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            leading: const Icon(Icons.add_comment_rounded, color: Colors.blueAccent),
+            title: const Text('New Chat', style: TextStyle(fontWeight: FontWeight.bold)),
             onTap: _createNewSession,
           ),
           const Divider(),
@@ -185,36 +274,13 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
                 final isActive = id == _activeSessionId;
                 return ListTile(
                   selected: isActive,
-                  leading: Icon(isActive
-                      ? Icons.chat_bubble_rounded
-                      : Icons.chat_bubble_outline_rounded),
+                  leading: Icon(isActive ? Icons.chat_bubble_rounded : Icons.chat_bubble_outline_rounded),
                   title: Text(id, maxLines: 1, overflow: TextOverflow.ellipsis),
                   onTap: () => _switchSession(id),
-                  trailing: id != 'default_session'
-                      ? IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded,
-                              size: 18),
-                          onPressed: () async {
-                            await _kit.persistence.deleteSession(id);
-                            final sessions =
-                                await _kit.persistence.listSessions();
-                            setState(() => _allSessions = sessions.isEmpty
-                                ? ['default_session']
-                                : sessions);
-                          },
-                        )
-                      : null,
                 );
               },
             ),
           ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.settings_outlined),
-            title: const Text('Engine Settings'),
-            onTap: () {},
-          ),
-          const SizedBox(height: 16),
         ],
       ),
     );
@@ -233,8 +299,7 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
                 const CircularProgressIndicator(strokeWidth: 3),
                 const SizedBox(height: 40),
               ] else ...[
-                const Icon(Icons.error_outline_rounded,
-                    color: Colors.red, size: 60),
+                const Icon(Icons.error_outline_rounded, color: Colors.red, size: 60),
                 const SizedBox(height: 20),
               ],
               Text(
@@ -258,16 +323,7 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
                 ),
                 const SizedBox(height: 12),
                 Text('${(_downloadProgress * 100).toInt()}%',
-                    style: const TextStyle(
-                        fontSize: 12, color: Colors.blueAccent)),
-              ],
-              if (isError) ...[
-                const SizedBox(height: 30),
-                FilledButton.icon(
-                  onPressed: _initializeKit,
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('Try Again'),
-                ),
+                    style: const TextStyle(fontSize: 12, color: Colors.blueAccent)),
               ],
             ],
           ),
@@ -286,42 +342,22 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Local Knowledge Base',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text('Local Knowledge Base', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             const Text(
-              'Your agent has access to a private vector store. You can ingest files like PDFs or JSONs to give the AI context about your private data.',
+              'Your agent has access to a private vector store. Ingest local files to provide private context for RAG retrieval.',
               style: TextStyle(color: Colors.white70),
             ),
             const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.file_upload_outlined),
-                    label: const Text('Ingest PDF'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.data_object_rounded),
-                    label: const Text('Ingest JSON'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.check_rounded),
-                label: const Text('Done'),
+                onPressed: _handleRealIngestion,
+                icon: const Icon(Icons.file_upload_outlined),
+                label: const Text('Pick and Ingest File'),
               ),
             ),
+            const SizedBox(height: 24),
           ],
         ),
       ),

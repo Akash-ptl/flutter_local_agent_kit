@@ -12,8 +12,7 @@ abstract class KitRuntimeAdapter {
     required PromptTemplate template,
     required int contextSize,
     required int gpuLayers,
-    bool useCoreML = false,
-    bool useNnapi = false,
+    String? multimodalProjectorPath,
   });
 
   /// Creates an initialized RAG session.
@@ -66,8 +65,7 @@ class DefaultKitRuntimeAdapter implements KitRuntimeAdapter {
     required PromptTemplate template,
     required int contextSize,
     required int gpuLayers,
-    bool useCoreML = false,
-    bool useNnapi = false,
+    String? multimodalProjectorPath,
   }) async {
     final engine = LlamaEngine(LlamaBackend());
     await engine.loadModel(
@@ -75,11 +73,12 @@ class DefaultKitRuntimeAdapter implements KitRuntimeAdapter {
       modelParams: ModelParams(
         contextSize: contextSize,
         gpuLayers: gpuLayers,
-        // TODO: Enable these when llamadart supports them directly
-        // useCoreML: useCoreML,
-        // useNnapi: useNnapi,
       ),
     );
+
+    if (multimodalProjectorPath != null) {
+      await engine.loadMultimodalProjector(multimodalProjectorPath);
+    }
 
     return LlmRuntimeSession(
       service: LlmService(

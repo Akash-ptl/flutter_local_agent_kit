@@ -94,6 +94,39 @@ void main() {
       );
     });
   });
+
+  group('Magic Features Test', () {
+    test('Vision: AgentChatMessage should hold image bytes', () {
+      final imageBytes = [1, 2, 3, 4];
+      final msg = AgentChatMessage.user('Analyze this', imageBytes: imageBytes);
+      expect(msg.imageBytes, equals(imageBytes));
+      expect(msg.hasImage, isTrue);
+    });
+
+    test('Advanced RAG: RetrievalResult serialization', () {
+      final result = RetrievalResult(
+        content: 'Relevant context',
+        score: 0.95,
+        source: SourceMetadata(title: 'doc.pdf', filePath: 'path/to/doc.pdf', pageNumber: 1),
+      );
+
+      final json = result.toJson();
+      expect(json['content'], 'Relevant context');
+      expect(json['score'], 0.95);
+      expect(json['source']['title'], 'doc.pdf');
+
+      final fromJson = RetrievalResult.fromJson(json);
+      expect(fromJson.content, result.content);
+      expect(fromJson.score, result.score);
+      expect(fromJson.source.title, 'doc.pdf');
+    });
+
+    test('MCP: McpService manages tools (Mocked)', () async {
+      final mcp = McpService();
+      expect(await mcp.getTools(), isEmpty);
+      await mcp.dispose();
+    });
+  });
 }
 
 class _FakeKitRuntimeAdapter implements KitRuntimeAdapter {
@@ -112,6 +145,7 @@ class _FakeKitRuntimeAdapter implements KitRuntimeAdapter {
     required PromptTemplate template,
     required int contextSize,
     required int gpuLayers,
+    String? multimodalProjectorPath,
     bool useCoreML = false,
     bool useNnapi = false,
   }) async {
