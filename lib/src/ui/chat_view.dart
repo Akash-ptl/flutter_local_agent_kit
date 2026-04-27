@@ -74,7 +74,10 @@ class _AgentChatViewState extends State<AgentChatView> {
   void initState() {
     super.initState();
     _scrollController.addListener(() {
-      _scrollPos.value = _scrollController.offset;
+      if (_scrollController.hasClients &&
+          _scrollController.position.hasContentDimensions) {
+        _scrollPos.value = _scrollController.offset;
+      }
     });
     if (widget.initialHistory != null) {
       _messages.addAll(widget.initialHistory!);
@@ -86,7 +89,8 @@ class _AgentChatViewState extends State<AgentChatView> {
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
+      if (_scrollController.hasClients &&
+          _scrollController.position.hasContentDimensions) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 300),
@@ -415,7 +419,9 @@ class _AgentChatViewState extends State<AgentChatView> {
                       valueListenable: _scrollPos,
                       builder: (context, pos, _) {
                         if (!_scrollController.hasClients ||
-                            _scrollController.position.maxScrollExtent - pos < 400) {
+                            !_scrollController.position.hasContentDimensions ||
+                            _scrollController.position.maxScrollExtent - pos <
+                                400) {
                           return const SizedBox.shrink();
                         }
                         return FloatingActionButton.small(
