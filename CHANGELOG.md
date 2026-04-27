@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.3] - 2026-04-27
+
+### Fixed
+- Resolved `_TypeError` crash in `AgentChatView` related to `maxScrollExtent` access before layout.
+- Added safety guards to `ScrollController` listeners for improved stability.
+
 ## [1.1.2] - 2026-04-25
 
 ### Fixed
