@@ -242,7 +242,8 @@ class FlutterLocalAgentKit {
   ///
   /// [systemPrompt] allows overriding the default agent instructions.
   /// [maxTokens] limits the length of each generation turn.
-  Stream<String> runAgent(String query, {String? systemPrompt, int? maxTokens}) {
+  Stream<String> runAgent(String query,
+      {String? systemPrompt, int? maxTokens}) {
     if (!isReady) throw Exception('Kit is not ready');
 
     // Create a temporary service instance if a custom prompt is provided

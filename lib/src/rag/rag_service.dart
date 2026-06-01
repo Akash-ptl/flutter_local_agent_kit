@@ -12,7 +12,7 @@ class RagService {
 
   /// Adds a document to the RAG database with optional metadata.
   Future<void> addDocument(String content, {SourceMetadata? metadata}) async {
-    // Currently mobile_rag_engine adds text directly, 
+    // Currently mobile_rag_engine adds text directly,
     // in future we can attach metadata to the database entry.
     await rag.addDocument(content);
   }
@@ -21,7 +21,8 @@ class RagService {
   Future<void> addFile(String filePath) async {
     final title = filePath.split('/').last;
     final content = await FileParser.parseFile(filePath);
-    await addDocument(content, metadata: SourceMetadata(title: title, filePath: filePath));
+    await addDocument(content,
+        metadata: SourceMetadata(title: title, filePath: filePath));
   }
 
   /// Retrieves relevant context for a query as structured results.
@@ -34,7 +35,7 @@ class RagService {
 
     // Map raw context to structured retrieval results
     // Note: mobile_rag_engine 0.1.x returns a consolidated context.
-    // We split it back into chunks for citation support if possible, 
+    // We split it back into chunks for citation support if possible,
     // or return the primary result.
     return [
       RetrievalResult(

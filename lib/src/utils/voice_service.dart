@@ -7,7 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 class VoiceService {
   final FlutterTts _tts = FlutterTts();
   final SpeechToText _stt = SpeechToText();
-  
+
   bool _isSttInitialized = false;
 
   /// Initializes the voice services.

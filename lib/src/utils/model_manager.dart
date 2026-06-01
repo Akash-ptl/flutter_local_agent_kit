@@ -108,7 +108,7 @@ class ModelManager {
 
     final stream = file.openRead();
     final digest = await sha256.bind(stream).first;
-    
+
     return digest.toString().toLowerCase() == expectedSha256.toLowerCase();
   }
 

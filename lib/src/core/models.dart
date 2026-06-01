@@ -119,8 +119,6 @@ enum MessageRole {
   }
 }
 
-
-
 /// A chunk of retrieved context with source metadata.
 class RetrievalResult {
   /// The text content of the chunk.

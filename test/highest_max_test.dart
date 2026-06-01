@@ -53,39 +53,44 @@ void main() {
       }
 
       // 4. Assertions
-      expect(citations, isNotEmpty, reason: 'Citations should be retrieved before streaming');
+      expect(citations, isNotEmpty,
+          reason: 'Citations should be retrieved before streaming');
       expect(citations.first.content, contains('PDF Context'));
-      expect(tokens.join(), contains('Mock AI Response'), reason: 'Should stream model output');
-      
+      expect(tokens.join(), contains('Mock AI Response'),
+          reason: 'Should stream model output');
+
       // Verify the prompt sent to the model included context and vision data
       final lastPrompt = mockRuntime.lastPrompt;
-      expect(lastPrompt, contains('Context:'), reason: 'RAG context should be in prompt');
-      expect(mockRuntime.lastImageBytes, equals(imageBytes), reason: 'Vision data should be passed to engine');
+      expect(lastPrompt, contains('Context:'),
+          reason: 'RAG context should be in prompt');
+      expect(mockRuntime.lastImageBytes, equals(imageBytes),
+          reason: 'Vision data should be passed to engine');
     });
 
-    test('Concurrency: Multiple overlapping queries should handle state safely', () async {
+    test('Concurrency: Multiple overlapping queries should handle state safely',
+        () async {
       await kit.initialize(modelPath: 'test_model.gguf');
-      
+
       final future1 = kit.askStream('Query 1').toList();
       final future2 = kit.askStream('Query 2').toList();
 
       final results = await Future.wait([future1, future2]);
-      
+
       expect(results[0].join(), contains('Mock AI Response'));
       expect(results[1].join(), contains('Mock AI Response'));
     });
 
     test('Persistence: Session saving and loading integrity', () async {
       await kit.initialize(modelPath: 'test_model.gguf');
-      
+
       final history = [
         AgentChatMessage.user('Hi'),
         AgentChatMessage.assistant('Hello', metadata: {'test': true}),
       ];
-      
+
       await kit.saveSession('test_sid', history);
       final loaded = await kit.loadSession('test_sid');
-      
+
       expect(loaded.length, history.length);
       expect(loaded.last.metadata?['test'], isTrue);
     });
@@ -146,8 +151,8 @@ class _MockLlmService extends LlmService {
     double temperature = 0.7,
     int? maxTokens,
   }) async* {
-    onGenerate(template.formatMessages(messages), 
-              messages.where((m) => m.hasImage).firstOrNull?.imageBytes);
+    onGenerate(template.formatMessages(messages),
+        messages.where((m) => m.hasImage).firstOrNull?.imageBytes);
     yield 'Mock ';
     yield 'AI ';
     yield 'Response';

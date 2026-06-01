@@ -32,7 +32,8 @@ void main() {
             findRichText: true),
         findsOneWidget,
       );
-      expect(find.textContaining('Error: Exception: boom', findRichText: true), findsWidgets);
+      expect(find.textContaining('Error: Exception: boom', findRichText: true),
+          findsWidgets);
       expect(find.byType(LinearProgressIndicator), findsNothing);
     });
   });

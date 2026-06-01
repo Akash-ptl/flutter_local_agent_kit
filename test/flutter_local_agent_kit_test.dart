@@ -107,7 +107,8 @@ void main() {
       final result = RetrievalResult(
         content: 'Relevant context',
         score: 0.95,
-        source: SourceMetadata(title: 'doc.pdf', filePath: 'path/to/doc.pdf', pageNumber: 1),
+        source: SourceMetadata(
+            title: 'doc.pdf', filePath: 'path/to/doc.pdf', pageNumber: 1),
       );
 
       final json = result.toJson();

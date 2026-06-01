@@ -121,7 +121,7 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
       if (!mounted) return;
       final path = result.files.single.path!;
       Navigator.pop(context);
-      
+
       final messenger = ScaffoldMessenger.of(context);
       messenger.showSnackBar(
         SnackBar(content: Text('Ingesting ${result.files.single.name}...')),
@@ -140,7 +140,9 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Ingestion Failed: $e'), backgroundColor: Colors.red),
+            SnackBar(
+                content: Text('Ingestion Failed: $e'),
+                backgroundColor: Colors.red),
           );
         }
       }
@@ -161,8 +163,12 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Connect')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Connect')),
         ],
       ),
     );
@@ -170,17 +176,21 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
     if (confirmed == true) {
       if (!mounted) return;
       try {
-        final transport = mcp.StreamableHttpClientTransport(Uri.parse(controller.text));
+        final transport =
+            mcp.StreamableHttpClientTransport(Uri.parse(controller.text));
         await _kit.useMcpServer(transport);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Connected to MCP Server. Tools synchronized.')),
+            const SnackBar(
+                content: Text('Connected to MCP Server. Tools synchronized.')),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('MCP Connection Error: $e'), backgroundColor: Colors.red),
+            SnackBar(
+                content: Text('MCP Connection Error: $e'),
+                backgroundColor: Colors.red),
           );
         }
       }
@@ -260,8 +270,10 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.add_comment_rounded, color: Colors.blueAccent),
-            title: const Text('New Chat', style: TextStyle(fontWeight: FontWeight.bold)),
+            leading:
+                const Icon(Icons.add_comment_rounded, color: Colors.blueAccent),
+            title: const Text('New Chat',
+                style: TextStyle(fontWeight: FontWeight.bold)),
             onTap: _createNewSession,
           ),
           const Divider(),
@@ -273,7 +285,9 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
                 final isActive = id == _activeSessionId;
                 return ListTile(
                   selected: isActive,
-                  leading: Icon(isActive ? Icons.chat_bubble_rounded : Icons.chat_bubble_outline_rounded),
+                  leading: Icon(isActive
+                      ? Icons.chat_bubble_rounded
+                      : Icons.chat_bubble_outline_rounded),
                   title: Text(id, maxLines: 1, overflow: TextOverflow.ellipsis),
                   onTap: () => _switchSession(id),
                 );
@@ -298,7 +312,8 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
                 const CircularProgressIndicator(strokeWidth: 3),
                 const SizedBox(height: 40),
               ] else ...[
-                const Icon(Icons.error_outline_rounded, color: Colors.red, size: 60),
+                const Icon(Icons.error_outline_rounded,
+                    color: Colors.red, size: 60),
                 const SizedBox(height: 20),
               ],
               Text(
@@ -322,7 +337,8 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
                 ),
                 const SizedBox(height: 12),
                 Text('${(_downloadProgress * 100).toInt()}%',
-                    style: const TextStyle(fontSize: 12, color: Colors.blueAccent)),
+                    style: const TextStyle(
+                        fontSize: 12, color: Colors.blueAccent)),
               ],
             ],
           ),
@@ -341,7 +357,8 @@ class _AgentStudioPageState extends State<AgentStudioPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Local Knowledge Base', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text('Local Knowledge Base',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             const Text(
               'Your agent has access to a private vector store. Ingest local files to provide private context for RAG retrieval.',

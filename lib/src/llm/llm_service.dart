@@ -56,18 +56,21 @@ class LlmService {
     for (final m in messages) {
       contentParts.add(LlamaTextContent(m.content));
       if (m.imageBytes != null) {
-        contentParts.add(LlamaImageContent(bytes: Uint8List.fromList(m.imageBytes!)));
+        contentParts
+            .add(LlamaImageContent(bytes: Uint8List.fromList(m.imageBytes!)));
       }
     }
 
-    return ChatSession(engine).create(
-      contentParts,
-      params: GenerationParams(
-        temp: temperature,
-        maxTokens: maxTokens ?? 1024,
-        stopSequences: [template.stopSequence],
-      ),
-    ).map((chunk) => chunk.toString());
+    return ChatSession(engine)
+        .create(
+          contentParts,
+          params: GenerationParams(
+            temp: temperature,
+            maxTokens: maxTokens ?? 1024,
+            stopSequences: [template.stopSequence],
+          ),
+        )
+        .map((chunk) => chunk.toString());
   }
 
   /// Formats a list of messages using the active model template.

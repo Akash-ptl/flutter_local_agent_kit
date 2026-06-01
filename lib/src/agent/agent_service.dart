@@ -65,7 +65,8 @@ Begin!""";
       final prompt = llm.format(conversation);
 
       String fullResponse = "";
-      await for (final token in llm.generateStream(prompt, maxTokens: maxTokens)) {
+      await for (final token
+          in llm.generateStream(prompt, maxTokens: maxTokens)) {
         fullResponse += token;
       }
 

@@ -67,7 +67,8 @@ class _AgentChatViewState extends State<AgentChatView> {
   final ImagePicker _picker = ImagePicker();
   final VoiceService _voice = VoiceService();
   final ValueNotifier<bool> _isListening = ValueNotifier(false);
-  final ValueNotifier<List<RetrievalResult>> _streamingCitations = ValueNotifier([]);
+  final ValueNotifier<List<RetrievalResult>> _streamingCitations =
+      ValueNotifier([]);
   final ValueNotifier<double> _scrollPos = ValueNotifier(0);
 
   @override
@@ -132,13 +133,15 @@ class _AgentChatViewState extends State<AgentChatView> {
 
   Future<void> _sendMessage() async {
     final text = _controller.text.trim();
-    if ((text.isEmpty && _selectedImageBytes == null) || _isProcessing.value) return;
+    if ((text.isEmpty && _selectedImageBytes == null) || _isProcessing.value) {
+      return;
+    }
 
     final imageToSend = _selectedImageBytes;
 
     setState(() {
       _messages.add(AgentChatMessage(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        id: 'user_${DateTime.now().microsecondsSinceEpoch}',
         content: text,
         role: MessageRole.user,
         timestamp: DateTime.now(),
@@ -150,7 +153,8 @@ class _AgentChatViewState extends State<AgentChatView> {
     });
     _scrollToBottom();
 
-    final assistantMessageId = DateTime.now().millisecondsSinceEpoch.toString();
+    final assistantMessageId =
+        'assistant_${DateTime.now().microsecondsSinceEpoch}';
 
     setState(() {
       _messages.add(AgentChatMessage.assistant("", id: assistantMessageId));
@@ -265,80 +269,100 @@ class _AgentChatViewState extends State<AgentChatView> {
                 children: [
                   ListView.builder(
                     controller: _scrollController,
+                    // ignore: deprecated_member_use
                     cacheExtent: 500, // Pre-render bubbles for smooth scrolling
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  final message = _messages[index];
-                  final isUser = message.role == MessageRole.user;
+                    itemBuilder: (context, index) {
+                      final message = _messages[index];
+                      final isUser = message.role == MessageRole.user;
 
-                  return Align(
-                    alignment:
-                        isUser ? Alignment.centerRight : Alignment.centerLeft,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width *
-                            (MediaQuery.of(context).size.width > 800
-                                ? 0.6
-                                : 0.85),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (!isUser)
-                              _buildAvatar(Icons.smart_toy_rounded, accent),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: isUser
-                                      ? accent
-                                      : theme.colorScheme.surfaceContainerHighest
-                                          .withValues(alpha: 0.5),
-                                  borderRadius:
-                                      BorderRadius.circular(16).copyWith(
-                                    bottomRight: isUser
-                                        ? const Radius.circular(0)
-                                        : null,
-                                    bottomLeft: !isUser
-                                        ? const Radius.circular(0)
-                                        : null,
-                                  ),
-                                ),
-                                child: Stack(
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                      return Align(
+                        alignment: isUser
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width *
+                                (MediaQuery.of(context).size.width > 800
+                                    ? 0.6
+                                    : 0.85),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (!isUser)
+                                  _buildAvatar(Icons.smart_toy_rounded, accent),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: isUser
+                                          ? accent
+                                          : theme.colorScheme
+                                              .surfaceContainerHighest
+                                              .withValues(alpha: 0.5),
+                                      borderRadius:
+                                          BorderRadius.circular(16).copyWith(
+                                        bottomRight: isUser
+                                            ? const Radius.circular(0)
+                                            : null,
+                                        bottomLeft: !isUser
+                                            ? const Radius.circular(0)
+                                            : null,
+                                      ),
+                                    ),
+                                    child: Stack(
                                       children: [
-                                        if (message.imageBytes != null)
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                                bottom: 8),
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              child: Image.memory(
-                                                Uint8List.fromList(
-                                                    message.imageBytes!),
-                                                height: 200,
-                                                fit: BoxFit.cover,
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            if (message.imageBytes != null)
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    bottom: 8),
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                  child: Image.memory(
+                                                    Uint8List.fromList(
+                                                        message.imageBytes!),
+                                                    height: 200,
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                ),
                                               ),
-                                            ),
-                                          ),
-                                        _activeAssistantId == message.id
-                                            ? ValueListenableBuilder<String>(
-                                                valueListenable:
-                                                    _streamingContent,
-                                                builder: (context, content, _) {
-                                                  return MarkdownBody(
-                                                    data: content.isEmpty
-                                                        ? "..."
-                                                        : content,
+                                            _activeAssistantId == message.id
+                                                ? ValueListenableBuilder<
+                                                    String>(
+                                                    valueListenable:
+                                                        _streamingContent,
+                                                    builder:
+                                                        (context, content, _) {
+                                                      return MarkdownBody(
+                                                        data: content.isEmpty
+                                                            ? "..."
+                                                            : content,
+                                                        selectable: true,
+                                                        builders: {
+                                                          'code':
+                                                              CodeBlockBuilder(
+                                                                  context),
+                                                        },
+                                                        styleSheet:
+                                                            _markdownStyle(
+                                                                theme, isUser),
+                                                      );
+                                                    },
+                                                  )
+                                                : MarkdownBody(
+                                                    data: message.content,
                                                     selectable: true,
                                                     builders: {
                                                       'code': CodeBlockBuilder(
@@ -346,74 +370,66 @@ class _AgentChatViewState extends State<AgentChatView> {
                                                     },
                                                     styleSheet: _markdownStyle(
                                                         theme, isUser),
-                                                  );
-                                                },
-                                              )
-                                            : MarkdownBody(
-                                                data: message.content,
-                                                selectable: true,
-                                                builders: {
-                                                  'code': CodeBlockBuilder(
-                                                      context),
-                                                },
-                                                styleSheet: _markdownStyle(
-                                                    theme, isUser),
-                                              ),
-                                        _activeAssistantId == message.id
-                                            ? ValueListenableBuilder<
-                                                List<RetrievalResult>>(
-                                                valueListenable:
-                                                    _streamingCitations,
-                                                builder: (context, cits, _) {
-                                                  if (cits.isEmpty) {
-                                                    return const SizedBox
-                                                        .shrink();
-                                                  }
-                                                  return _buildCitations(
-                                                      cits, theme, accent);
-                                                },
-                                              )
-                                            : (message.metadata?['citations'] !=
-                                                    null
-                                                ? _buildCitations(
-                                                    message.metadata![
-                                                        'citations'],
-                                                    theme,
-                                                    accent)
-                                                : const SizedBox.shrink()),
+                                                  ),
+                                            _activeAssistantId == message.id
+                                                ? ValueListenableBuilder<
+                                                    List<RetrievalResult>>(
+                                                    valueListenable:
+                                                        _streamingCitations,
+                                                    builder:
+                                                        (context, cits, _) {
+                                                      if (cits.isEmpty) {
+                                                        return const SizedBox
+                                                            .shrink();
+                                                      }
+                                                      return _buildCitations(
+                                                          cits, theme, accent);
+                                                    },
+                                                  )
+                                                : (message.metadata?[
+                                                            'citations'] !=
+                                                        null
+                                                    ? _buildCitations(
+                                                        message.metadata![
+                                                            'citations'],
+                                                        theme,
+                                                        accent)
+                                                    : const SizedBox.shrink()),
+                                          ],
+                                        ),
+                                        if (!isUser &&
+                                            _activeAssistantId != message.id)
+                                          Positioned(
+                                            right: -8,
+                                            top: -8,
+                                            child: IconButton(
+                                              icon: Icon(
+                                                  Icons.volume_up_rounded,
+                                                  size: 16,
+                                                  color: theme.colorScheme
+                                                      .onSurfaceVariant
+                                                      .withValues(alpha: 0.5)),
+                                              onPressed: () =>
+                                                  _voice.speak(message.content),
+                                            ),
+                                          ),
                                       ],
                                     ),
-                                    if (!isUser &&
-                                        _activeAssistantId != message.id)
-                                      Positioned(
-                                        right: -8,
-                                        top: -8,
-                                        child: IconButton(
-                                          icon: Icon(Icons.volume_up_rounded,
-                                              size: 16,
-                                              color: theme
-                                                  .colorScheme.onSurfaceVariant
-                                                  .withValues(alpha: 0.5)),
-                                          onPressed: () =>
-                                              _voice.speak(message.content),
-                                        ),
-                                      ),
-                                  ],
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(width: 8),
+                                if (isUser)
+                                  _buildAvatar(
+                                      Icons.person_rounded, Colors.grey),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            if (isUser)
-                              _buildAvatar(Icons.person_rounded, Colors.grey),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              Positioned(
-                bottom: 16,
+                      );
+                    },
+                  ),
+                  Positioned(
+                    bottom: 16,
                     right: 16,
                     child: ValueListenableBuilder<double>(
                       valueListenable: _scrollPos,
@@ -546,9 +562,11 @@ class _AgentChatViewState extends State<AgentChatView> {
             runSpacing: 8,
             children: citations.map((c) {
               final source = c['source'];
-              final title = source is Map ? source['title'] ?? 'Source' : 'Source';
+              final title =
+                  source is Map ? source['title'] ?? 'Source' : 'Source';
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(8),

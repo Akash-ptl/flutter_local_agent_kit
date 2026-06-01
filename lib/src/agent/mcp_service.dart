@@ -18,14 +18,14 @@ class McpService {
   /// Lists all tools available across all connected MCP servers.
   Future<List<BaseTool>> getTools() async {
     final List<BaseTool> allTools = [];
-    
+
     for (final client in _clients) {
       final result = await client.listTools();
       for (final tool in result.tools) {
         allTools.add(McpTool(client, tool));
       }
     }
-    
+
     return allTools;
   }
 
