@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.4] - 2026-06-01
+
+### Fixed
+- Resolved deprecated `cacheExtent` usage in `AgentChatView` to maximize pub.dev static analysis score.
+- Fixed critical message ID collision in `AgentChatView` where user messages could be overwritten when a stream failed in rapid succession.
+
+### Changed
+- Fully formatted the codebase to strict Dart code standards.
+
 ## [1.1.3] - 2026-04-27
 
 ### Fixed
