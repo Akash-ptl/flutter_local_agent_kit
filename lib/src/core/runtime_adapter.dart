@@ -6,6 +6,9 @@ import 'package:flutter_local_agent_kit/src/rag/rag_service.dart';
 
 /// Runtime abstraction for native engine setup and teardown.
 abstract class KitRuntimeAdapter {
+  /// Creates a [KitRuntimeAdapter].
+  KitRuntimeAdapter();
+
   /// Creates an initialized LLM session.
   Future<LlmRuntimeSession> initializeLlm({
     required String modelPath,
@@ -59,6 +62,9 @@ class RagRuntimeSession {
 
 /// Default adapter backed by the production native engines.
 class DefaultKitRuntimeAdapter implements KitRuntimeAdapter {
+  /// Creates a [DefaultKitRuntimeAdapter].
+  DefaultKitRuntimeAdapter();
+
   @override
   Future<LlmRuntimeSession> initializeLlm({
     required String modelPath,

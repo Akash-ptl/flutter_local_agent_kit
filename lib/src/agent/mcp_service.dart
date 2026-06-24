@@ -3,6 +3,9 @@ import 'package:flutter_local_agent_kit/src/agent/tools.dart';
 
 /// Manages connections to Model Context Protocol (MCP) servers.
 class McpService {
+  /// Creates an [McpService].
+  McpService();
+
   final List<McpClient> _clients = [];
 
   /// Connects to a new MCP server using the provided [transport].

@@ -5,6 +5,9 @@ import 'package:flutter_local_agent_kit/src/core/models.dart';
 /// Templates responsible for formatting messages into a single prompt string
 /// that the specific LLM architecture expects.
 abstract class PromptTemplate {
+  /// Creates a [PromptTemplate].
+  PromptTemplate();
+
   /// The sequence that signals the model to stop generating.
   String get stopSequence;
 
@@ -14,6 +17,9 @@ abstract class PromptTemplate {
 
 /// The prompt template specifically tuned for Llama 3 models.
 class Llama3Template extends PromptTemplate {
+  /// Creates a [Llama3Template].
+  Llama3Template();
+
   @override
   String get stopSequence => '<|eot_id|>';
 
@@ -34,6 +40,9 @@ class Llama3Template extends PromptTemplate {
 
 /// A simple template for general-purpose models (mostly legacy).
 class SimplePromptTemplate extends PromptTemplate {
+  /// Creates a [SimplePromptTemplate].
+  SimplePromptTemplate();
+
   @override
   String get stopSequence => '\nUser:';
 
@@ -51,6 +60,9 @@ class SimplePromptTemplate extends PromptTemplate {
 
 /// The prompt template tuned for Google Gemma models.
 class GemmaTemplate extends PromptTemplate {
+  /// Creates a [GemmaTemplate].
+  GemmaTemplate();
+
   @override
   String get stopSequence => '<end_of_turn>';
 
@@ -68,6 +80,9 @@ class GemmaTemplate extends PromptTemplate {
 
 /// The prompt template tuned for Mistral and Mixtral models.
 class MistralTemplate extends PromptTemplate {
+  /// Creates a [MistralTemplate].
+  MistralTemplate();
+
   @override
   String get stopSequence => '</s>';
 
@@ -87,6 +102,9 @@ class MistralTemplate extends PromptTemplate {
 
 /// The standard ChatML template used by Qwen, OpenHermes, and others.
 class ChatMlTemplate extends PromptTemplate {
+  /// Creates a [ChatMlTemplate].
+  ChatMlTemplate();
+
   @override
   String get stopSequence => '<|im_end|>';
 

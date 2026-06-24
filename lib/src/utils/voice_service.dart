@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 /// Service providing local-first Text-to-Speech (TTS) and Speech-to-Text (STT).
 class VoiceService {
+  /// Creates a [VoiceService].
+  VoiceService();
+
   final FlutterTts _tts = FlutterTts();
   final SpeechToText _stt = SpeechToText();
 
@@ -38,15 +40,12 @@ class VoiceService {
     required void Function(bool isListening) onListeningChange,
   }) async {
     if (!_isSttInitialized) {
-      final hasPermission = await Permission.microphone.request().isGranted;
-      if (!hasPermission) {
-        throw Exception("Microphone permission denied");
-      }
       _isSttInitialized = await _stt.initialize();
     }
 
     if (!_isSttInitialized) {
-      throw Exception("Speech recognition failed to initialize");
+      throw Exception(
+          "Speech recognition failed to initialize or microphone permission denied");
     }
 
     if (_stt.isListening) {

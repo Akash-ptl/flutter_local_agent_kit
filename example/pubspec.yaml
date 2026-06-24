@@ -12,7 +12,7 @@ dependencies:
     sdk: flutter
   flutter_local_agent_kit:
     path: ../
-  mcp_dart: ^2.1.0
+  mcp_dart: ^2.2.1
 
 dependency_overrides:
   flutter_rust_bridge: 2.11.1

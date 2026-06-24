@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.5] - 2026-06-24
+
+### Changed
+- Upgraded package dependencies to support their latest stable versions.
+- Expanded platform support to natively include **macOS** by removing the `permission_handler` dependency and delegating permission handling directly to `speech_to_text`.
+- Documented all remaining public API constructors to achieve 100% documentation coverage.
+
 ## [1.1.4] - 2026-06-01
 
 ### Fixed
