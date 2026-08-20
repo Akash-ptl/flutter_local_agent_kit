@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.6] - 2026-08-20
+
+### Changed
+- Upgraded package dependencies (`mobile_rag_engine` to `^0.20.0`, `syncfusion_flutter_pdf` to `^34.2.4`, `dio` to `^5.11.0`, `llamadart` to `^0.8.19`, `mcp_dart` to `^2.4.1`, etc.) to maximize pub.dev score to 160/160.
+
 ## [1.1.5] - 2026-06-24
 
 ### Changed
